@@ -1,12 +1,14 @@
 <?php
 namespace tea;
+
 class TEA {
-    static function autoload($class) {
-        if (substr($class, 0, 5) == 'tea::') {
-            include __DIR__.'/../'.str_replace('::', '/', $class).'.php';
-        }
+    static function init() {
+        require_once __DIR__.'/util/ClassLoader.php';
+        $loader = new tea::util::ClassLoader('tea', __DIR__);
+        $loader->register();
     }
 }
 
-spl_autoload_register(array('tea::TEA','autoload'));
+TEA::init();
+
 
