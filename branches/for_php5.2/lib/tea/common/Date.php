@@ -1,5 +1,4 @@
 <?php
-namespace tea::common;
 
 /**
  * Date
@@ -24,7 +23,7 @@ class Date {
             $this->timestamp = strtotime($d);
             return;
         }
-        if ($d instanceof tea::common::Date) {
+        if ($d instanceof Date) {
             $this->timestamp = $d->timestamp;
             return;
         }
