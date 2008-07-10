@@ -1,5 +1,5 @@
 <?php
-namespace tea::common;
+
 class Config implements ArrayAccess {
     private $conf = array();
 
