@@ -1,25 +1,29 @@
 <?php
-include '../lib/tea/TEA.php';
+ini_set('display_errors','on');
+error_reporting(E_ALL);
 
-use tea::db::driver::mysql::Mysql;
+include '../lib/tea/TEA.class.php';
+TEA::load('db/DB');
+TEA::load('db/mysql/Mysql');
+TEA::load('db/PreparedStatement');
+TEA::load('db/ResultSet');
 
 $conf = array(
-    "host"=>"localhost",
-    "user"=>"root",
+    "host"=>"127.0.0.1",
+    "username"=>"root",
     "password"=>"12345678",
     "name"=>"teaphp_test",
     "charset"=>"utf8",
 );
 
-$mysql = new Mysql();
-$mysql->connect($conf);
+$mysql = new Mysql($conf);
 
-$sql = 'select * from user';
+
+$sql = 'select * from users';
 $rs = $mysql->query($sql);
 
-while ($row = $rs->fetch()) {
+foreach ($rs as $k=>$row) {
     print_r($row);
 }
 
-
-
+print_r($rs->fetchAll());
