@@ -1,0 +1,8 @@
+#!/bin/bash
+path=`readlink -f $0`
+dir=${path%/*}
+php_file=$dir/pot.php
+/usr/bin/env php $php_file $@
+
+
+
