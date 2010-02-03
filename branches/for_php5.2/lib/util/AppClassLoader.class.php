@@ -22,7 +22,7 @@ class AppClassLoader {
             $this->classMap = array();
             $this->scan($appDir);
         }
-        spl_autoload_register(array(__CLASS__, 'load'));
+        spl_autoload_register(array($this, 'load'));
     }
     
     function load($class) {
