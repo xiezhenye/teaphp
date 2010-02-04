@@ -8,6 +8,7 @@ class App {
     private $confPath = '';
     private $conf = array();
     private $path;
+    private $classLoader = null;
     
     /**
      * 初始化
@@ -83,6 +84,21 @@ class App {
             $this->conf[$confName] = include $this->confPath.'/'.$confName.'.conf.php';
         }
         $ret = $this->conf[$confName];
+        return $this->arrayPath($ret, $path, $default);
+    }
+    
+    function moduleConf($module, $confName, $path = '', $default = null) {
+        $key = "$module/$confName";
+        if (!isset($this->conf[$key])) {
+            $conf_file = $this->path.'/modules/'.$module.'/'.$confName.'.conf.php';
+            $this->conf[$key] = include $conf_file;
+        }
+        $ret = $this->conf[$key];
+        return $this->arrayPath($ret, $path, $default);
+    }
+    
+    protected function arrayPath($array, $path, $default = null) {
+        $ret = $array;
         $pathArr = array_filter(explode('/', $path));
         foreach ($pathArr as $key) {
             if (!isset($ret[$key])) {
@@ -93,8 +109,15 @@ class App {
         return $ret;
     }
     
-    function getClassLoader($cache_file = null) {
-        $loader = new AppClassLoader($this->path, $cache_file);
-        return $loader;
+    function getClassLoader() {
+        if (is_null($this->classLoader)) {    
+            $cache_file = $this->conf('app', 'class_loader_cache');
+            $this->classLoader = new AppClassLoader($this->path, $cache_file);
+        }
+        return $this->classLoader;
+    }
+    
+    function path() {
+        return $this->path;
     }
 }
