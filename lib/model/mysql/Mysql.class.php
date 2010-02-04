@@ -37,7 +37,7 @@ class Mysql {
         $this->name = $name;
         $this->charset = $charset;
         $this->selectDB($name);
-        mysql_query("set names $charset", $this->db);
+        mysql_query("set names '$charset'", $this->db);
     }
     
     public function selectDB($name) {
