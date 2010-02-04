@@ -120,4 +120,14 @@ class App {
     function path() {
         return $this->path;
     }
+    
+    function modules() {
+        $dirs = glob($this->path.'/modules/*', GLOB_ONLYDIR);
+        $ret = array();
+        foreach ($dirs as $dir) {
+            $ret[]= substr(strrchr($dir, '/'), 1);
+
+        }
+        return $ret;
+    }
 }
