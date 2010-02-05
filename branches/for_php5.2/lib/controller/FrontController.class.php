@@ -90,8 +90,10 @@ class FrontController {
             $this->view->render($ret[0], $ret[1]);
         } catch (ActionException $e) {
             $ret = $e->getActionReturn();
+            $response->sendStatusHeader(500);
             $this->view->render($ret[0], $ret[1]);
         } catch (Exception $e) {
+            $response->sendStatusHeader(500);
             $this->view->showError($e);
         }
     }
