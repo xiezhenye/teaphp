@@ -4,19 +4,28 @@
  *
  */
 class Dispatcher {
+    /**
+     * @var string
+     */
     protected $appPath;
-    //protected $route;
-    //protected $baseUrl;
+    /**
+     * @var array
+     */
     protected $conf;
+    /**
+     * @var App
+     */
+    protected $app;
     
     /**
-     * @param string $appPath 应用根目录
-     * @param array $appConf 应用配置
+     *
+     * @param App $app
      */
-    function __construct($appPath, $appConf) {
+    function __construct($app) {
         ErrorWrapperException::bind();
-        $this->appPath = $appPath;
-        $this->conf = $appConf;
+        $this->appPath = $app->path();
+        $this->conf = $app->conf('app');
+	$this->app = $app;
     }
     
     /**
@@ -24,8 +33,8 @@ class Dispatcher {
      *
      * @param HTTPRequest $request
      */
-    function dispatch($request) {
-        $params = $this->parse($request, $this->conf);
+    function dispatch($url, $request) {
+        $params = $this->parse($url, $request, $this->conf);
         if (empty($params)) {
             HTTPResponse::getInstance()->sendStatusHeader(404);
             return;
@@ -43,14 +52,14 @@ class Dispatcher {
         $view = new $viewName($conf);
         $view->setDispatcher($this);
         $view->setAppPath($this->appPath);
-		if (method_exists($view, 'setRequest')) {
-			$view->setRequest($request);
-		}
+	if (method_exists($view, 'setRequest')) {
+	    $view->setRequest($request);
+	}
         $view->setResponse($response);
         
         if (is_null($params)) {
             $response->sendStatusHeader(404);
-            exit;
+            return;
         }
         
         if (!isset($params['method'])) {
@@ -59,7 +68,7 @@ class Dispatcher {
         
         $request->setParams($params);
         
-        $controller = new FrontController($this->appPath, $this->conf, $this);
+        $controller = new FrontController($this->app);
         $controller->setView($view);
         $view->setController($controller);
         $controller->call($params['module'],
@@ -81,19 +90,24 @@ class Dispatcher {
     
     /**
      * 解析uri的参数
+     * 
+     * @param string $url
      * @param HTTPRequest $request
      * @param array $conf
      */
-    function parse($request, $conf) {
-		$url = $request->url();
-		$parsed = parse_url($url);
+    function parse($url, $request, $conf) {
+	$parsed = parse_url($url);
         foreach ($conf['route'] as $regexp => $map) {
-            $matched = preg_match("($regexp)i", $parsed['path'], $m);
+	    $path = $parsed['path'];
+	    if (StringUtil::beginWith($path, $this->getBaseUrl())) {
+		$path = substr($path, strlen($this->getBaseUrl()));
+	    }
+            $matched = preg_match("($regexp)i", $path, $m);
             if (! $matched) { //没有匹配规则转到下一条 
                 continue;
             }
             unset($m[0]);
-            foreach ($map as $k=>$v) {
+            foreach ($map as $k => $v) {
                 if (is_int($k)) {
                     $ret[$v] = rawurldecode($m[$k + 1]);
                     unset($m[$k + 1]);
@@ -114,19 +128,18 @@ class Dispatcher {
             HTTPRequest::autoStripslashes();
             $ret['path_seperated'] = array_slice(explode('/', $ret['path']), 1);
             $ret['params'] = $p;
-			if (!isset($ret['view'])) {
-				$accepts = array_map('trim', explode(',', $request->accept()));
-				if (in_array('text/json', $accepts)) {
-					$ret['view'] = 'JSONView';
-				} else {
-					$ret['view'] = 'PHPView';
-				}
-			}
+	    if (!isset($ret['view'])) {
+		$accepts = array_map('trim', explode(',', $request->accept()));
+		if (in_array('text/json', $accepts)) {
+			$ret['view'] = 'JSONView';
+		} else {
+			$ret['view'] = 'PHPView';
+		}
+	    }
             return $ret;
         }
         return null;
     }
-    
     
     function getBaseUrl() {
         return $this->conf['url']['base'];

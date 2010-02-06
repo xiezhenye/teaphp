@@ -31,9 +31,9 @@ class AppClassLoader {
         }
     }
     
-	function pathOf($class) {
-		return isset($this->classMap[$class]) ? $this->classMap[$class] : '';
-	}
+    function pathOf($class) {
+	return isset($this->classMap[$class]) ? $this->classMap[$class] : '';
+    }
 	
     function addExternDir($dir) {
         $this->externDir[]= $dir;

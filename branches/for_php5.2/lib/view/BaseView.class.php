@@ -5,12 +5,12 @@
  * 视图基类
  */
 abstract class BaseView {
-    const LAYOUT = 'layout';
-    const NULL = 'null';    
-    const REDIRECT = 'redirect';
-    const SUCCESS = 'success';
-    const FAILURE = 'failure';
-    const ERROR = 'error';
+    const LAYOUT = '_layout';
+    const NULL = '_null';    
+    const REDIRECT = '_redirect';
+    const SUCCESS = '_success';
+    const FAILURE = '_failure';
+    const ERROR = '_error';
     
     
     protected $_appPath;
