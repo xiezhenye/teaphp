@@ -280,7 +280,11 @@ class HTTPRequest {
         $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
         return isset($_SERVER[$key]) ? $_SERVER[$key] : $default;
     }
-        
+    
+    function session($name) {
+        $sess = Session::getInstance();
+        return $sess[$name];
+    }
     /**
      * 转发 http 请求，会携带请求中的主要 header
      *
@@ -373,8 +377,64 @@ class UploadedFile {
      *
      * @return bool
      */
-	function moveTo($path) {
-		return move_uploaded_file($this->tmpName(), $path);
-	}
+    function moveTo($path) {
+            return move_uploaded_file($this->tmpName(), $path);
+    }
+    
 }
 
+
+class Session implements ArrayAccess {
+    /**
+     * @param string $handler
+     * @param array $conf
+     * 
+     * @return Session
+     */
+    static function getInstance($handler = 'file', $conf = array()) {
+        static $ret = null;
+        if (is_null($ret)) {
+            $ret = new Session($handler, $conf);
+        }
+        return $ret;
+    }
+    
+    /**
+     *
+     * @param string $handler
+     * @param array $conf
+     */
+    private function __construct($handler, $conf) {
+        if (isset($conf['domain'])) {
+            ini_set('session.cookie_domain', $conf['domain']);
+        }
+        if ($handler == 'memcache') {
+            $this->initMemcacheHandler($conf);
+        }
+        session_start();
+    }
+    
+    private function initMemcacheHandler($conf) {
+        $host = $conf['host'];
+        ini_set('session.save_handler', 'memcache');
+        $url = "tcp://$host";
+        //$url.= "?persistent=0&weight=1&timeout=1&retry_interval=5";
+        ini_set('session.save_path', $url);
+    }
+    
+    function OffsetGet($offset) {
+        return $this->OffsetExists($offset) ? $_SESSION[$offset] : null;
+    }
+    
+    function OffsetExists($offset) {
+        return isset($_SESSION[$offset]);
+    }
+    
+    function OffsetUnset($offset) {
+        unset($_SESSION[$offset]);
+    }
+    
+    function OffsetSet($offset, $value) {
+        $_SESSION[$offset] = $value;
+    }
+}

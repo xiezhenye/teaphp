@@ -126,7 +126,7 @@ class Dispatcher {
             isset($parsed['query']) ? parse_str($parsed['query'], $ret['query']) : array();
             $_GET = $ret['query'];
             HTTPRequest::autoStripslashes();
-            $ret['path_seperated'] = array_slice(explode('/', $ret['path']), 1);
+            //$ret['path_seperated'] = array_slice(explode('/', $ret['path']), 1);
             $ret['params'] = $p;
 	    if (!isset($ret['view'])) {
 		$accepts = array_map('trim', explode(',', $request->accept()));
