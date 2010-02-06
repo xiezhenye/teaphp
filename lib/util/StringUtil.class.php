@@ -23,7 +23,17 @@ class StringUtil {
         $ret = nl2br(str_replace(' ', '&nbsp;', $ret));
         return $ret;
     }
- 
+    
+    static function countChars($s, $encoding = 'utf-8') {
+	if (function_exists('mb_strlen')) {
+	    return mb_strlen($s, $encoding);
+	}
+	if (function_exists('iconv_strlen')) {
+	    return iconv_strlen($s, $encoding);
+	}
+	return strlen($s);
+    }
+    
     static function cutString($s, $maxWidth, $trimmarker = '...', $encoding = 'utf-8') {
         if (function_exists('mb_strimwidth')) {
             return mb_strimwidth($s, 0, $maxWidth, $trimmarker, $encoding);
@@ -31,23 +41,25 @@ class StringUtil {
         
         $ret = '';
         $width = 0;
-        if (function_exists('iconv_substr')) {
-            $len = iconv_strlen($s, $encoding);
-            $lentm = strlen($trimmarker);
-            for ($i = 0; $i < $len; $i++) {
-                $char = iconv_substr($s, $i, 1, $encoding);
-                $charWidth = strlen($char) > 1 ? 2 : 1;
-                if ($width + $charWidth <= $maxWidth) {
-                    if ($i == $len - 1)
-                        return $ret.$char;
-                } elseif ($width + $charWidth + $lentm > $maxWidth) {
-                    return $ret.$trimmarker;
-                }
-                $ret.= iconv_substr($s, $i, 1, $encoding);
-                $width+= $charWidth;
-            }
-            return $ret;
-        }
+        if (!function_exists('iconv_substr')) {
+	    return '';
+	}
+	$len = iconv_strlen($s, $encoding);
+	$lentm = strlen($trimmarker);
+	for ($i = 0; $i < $len; $i++) {
+	    $char = iconv_substr($s, $i, 1, $encoding);
+	    $charWidth = strlen($char) > 1 ? 2 : 1;
+	    if ($width + $charWidth <= $maxWidth) {
+		if ($i == $len - 1) {
+		    return $ret.$char;
+		}
+	    } elseif ($width + $charWidth + $lentm > $maxWidth) {
+		return $ret.$trimmarker;
+	    }
+	    $ret.= iconv_substr($s, $i, 1, $encoding);
+	    $width+= $charWidth;
+	}
+	return $ret;
     }
     
     static function camelize($str, $lcfirst = false) {
@@ -57,7 +69,7 @@ class StringUtil {
             $ret = self::lcfirst($ret);
         }
         return $ret;
-	}
+    }
     
     /**
      * 将以大写分割的字符串转换为以_分割
@@ -70,18 +82,18 @@ class StringUtil {
         return $replace;
     }
 	
-	static function singluarize($str) {
-		if (substr($str, -3) == 'hes') {
-			return substr($str, 0, -2);
-		}
-		if (substr($str, -3) == 'ies') {
-			return substr($str, 0, -3).'y';
-		}
-		if (substr($str, -1) == 's') {
-			return substr($str, 0, -1);
-		}
-		return $str;
+    static function singluarize($str) {
+	if (substr($str, -3) == 'hes') {
+		return substr($str, 0, -2);
 	}
+	if (substr($str, -3) == 'ies') {
+		return substr($str, 0, -3).'y';
+	}
+	if (substr($str, -1) == 's') {
+		return substr($str, 0, -1);
+	}
+	return $str;
+    }
     
     static function lcfirst($str) {
         $str[0] = strtolower($str[0]);

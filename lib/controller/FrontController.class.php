@@ -5,31 +5,25 @@
  *
  */
 class FrontController {
-    protected $appPath;
     /**
      *
      * @var BaseView
      */
     protected $view;
-    protected $actionConf;
+    
+    /**
+     * @var App
+     */
+    protected $app;
+    
     
     /**
      *
-     * @var Dispatcher
+     * @param App $app
      */
-    protected $dispatcher;
-    
-    /**
-     * @param string $appPath 应用根目录
-     * @param array $appConf 应用配置
-     * @param Dispatcher $dispatcher
-     */
-    function __construct($appPath, $appConf, $dispatcher) {
+    function __construct($app) {
         ErrorWrapperException::bind();
-        $this->dispatcher = $dispatcher;
-        $this->appPath = $appPath;
-        $this->actionConf = isset($appConf['actions']) ? $appConf['actions'] : array();
-        $this->baseUrl = $appConf['url']['base'];
+        $this->app = $app;
     }
     
     function setView($view) {
@@ -39,54 +33,58 @@ class FrontController {
     /**
      * 调用控制器
      *
-     * @param string $moduleName 模块名
+     * @param string $module_name 模块名
      * @param string $type 动作类型
      * @param string $http_method http方法名
      * @param string $method 方法名
-     * @param HTTPRequest $request http 请求对象
-     * @param HTTPResponse $response http 响应对象
+     * @param HTTPRequest $request
+     * @param HTTPResponse $response
      */
-    function call($moduleName, $type, $http_method, $method, $request, $response) {
-        $actionName = StringUtil::camelize($moduleName) . ucfirst($type);
-        $methodName = strtolower($http_method).StringUtil::camelize($method);
-        if (!class_exists($actionName)) {
+    function call($module_name, $type, $http_method, $method, $request, $response) {
+        $class_name = StringUtil::camelize($module_name) . ucfirst($type);
+        $method_name = strtolower($http_method).StringUtil::camelize($method);
+        if (!class_exists($class_name)) {
             $response->sendStatusHeader(404);
-            echo "no action $actionName\n";
+            echo "no action $class_name\n";
             return;
         }
-        if (! method_exists($actionName, $methodName)) {
+        if (! method_exists($class_name, $method_name)) {
             $response->sendStatusHeader(404);
-            echo "no $moduleName $methodName\n";
+            echo "no $module_name $methodName\n";
             return;
         }
         
         $ret = null;
         try {
-            $action = new $actionName();
-            if (method_exists($action, 'setDispatcher')) {
-                $action->setDispatcher($this->dispatcher);
+            /** @var BaseAction */
+            $action = new $class_name();
+            // add callbacks
+            $before_callbacks = $this->app->conf('app', "actions/$type/hooks/before", array());
+            foreach ($before_callbacks as $callback) {
+                $action->addBeforeActionCallback($callback);
             }
-            if (method_exists($action, 'setController')) {
-                $action->setController($this);
+            $after_callbacks = $this->app->conf('app', "actions/$type/hooks/after'", array());
+            foreach ($before_callbacks as $callback) {
+                $action->addAfterActionCallback($callback);
             }
-            if (method_exists($action, 'beforeAction')) {
-                $ret = $action->beforeAction($methodName, $request);
-            }
+            
+            $action->setDispatcher($this->app->getDispatcher());
+            $action->setController($this);
+            $ret = $action->beforeAction($method_name, $request);
             if (is_null($ret)) {
-                if (method_exists($action, $methodName)) {
-                    $ret = (array)$action->$methodName($request);
+                if (method_exists($action, $method_name)) {
+                    $ret = (array)$action->$method_name($request);
                 } else {
                     throw new Exception('no such method');
                 }
             }
+            $default_view = $module_name.'_'.$method;
             if (!array_key_exists(0, $ret)) {
-                $ret = array($ret, $method);
+                $ret = array($ret, $default_view);
             } elseif (!isset($ret[1])) {
-                $ret[1] = $method;
+                $ret[1] = $default_view;
             }
-            if (method_exists($action, 'afterAction')) {
-                $action->afterAction($methodName, $request, $ret);
-            }
+            $action->afterAction($method_name, $request, $ret);
             $this->view->render($ret[0], $ret[1]);
         } catch (ActionException $e) {
             $ret = $e->getActionReturn();

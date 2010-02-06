@@ -9,6 +9,8 @@ class App {
     private $conf = array();
     private $path;
     private $classLoader = null;
+    private $dispatcher = null;
+    private $repositories = array();
     
     /**
      * 初始化
@@ -42,16 +44,16 @@ class App {
     /**
      * 根据配置得到仓储实例
      *
+     * @param string $module
      * @param string $class
      * @return Repository
      */
-    function getRepository($class) {
-        $repository = array();
-        $conf = $this->conf('models', $class);
+    function getRepository($module, $class) {
+        $conf = $this->moduleConf($module, $class.'.model');
         if (!$conf) {
-            throw new Exception("no such model '$class' config");
+            throw new Exception("no such model '$class' config in module $module.");
         }
-        if (!isset($repository[$class])) {
+        if (!isset($this->repositories[$class])) {
             if (isset($conf['repository'])) {
                 $repoClass = $conf['repository'];
                 $ret = new $repoClass();
@@ -63,9 +65,9 @@ class App {
             $ret->setConfig($conf);
             $dbName = isset($conf['db']) ? $conf['db'] : 'default';
             $ret->setDB($this->getDB($dbName));
-            $repository[$class] = $ret;
+            $this->repositories[$class] = $ret;
         }
-        return $repository[$class];
+        return $this->repositories[$class];
     }
     
     /**
@@ -75,8 +77,10 @@ class App {
      * @deprecated
      */
     function getDispatcher() {
-        $dispatcher = new Dispatcher(APP_PATH, $this->conf('app'));
-        return $dispatcher;
+        if (is_null($this->dispatcher)) {
+            $this->dispatcher = new Dispatcher($this);
+        }
+        return $this->dispatcher;
     }
     
     function conf($confName, $path = '', $default = null) {
@@ -126,7 +130,6 @@ class App {
         $ret = array();
         foreach ($dirs as $dir) {
             $ret[]= substr(strrchr($dir, '/'), 1);
-
         }
         return $ret;
     }
