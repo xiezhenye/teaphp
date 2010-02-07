@@ -71,4 +71,12 @@ class BaseAction {
         $arr = explode('/', $class_path);
         return $arr[count($arr) - 3];
     }
+    
+    function urlFor($type, $action, $method = null, $params = array()) {
+        $params['_type'] = $type;
+        $params['_action'] = $action;
+        $params['_method'] = is_null($method) ? $action : $method;
+        $ret = $this->app->getDispatcher()->urlFor($params);
+        return $ret;
+    }
 }
