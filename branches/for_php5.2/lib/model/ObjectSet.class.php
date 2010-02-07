@@ -3,7 +3,7 @@
  * 对象集合
  *
  */
-class ObjectSet implements  Countable,Iterator {
+class ObjectSet implements Countable,Iterator {
     
     protected $rs = array();
     protected $className;
@@ -34,14 +34,14 @@ class ObjectSet implements  Countable,Iterator {
             $class = $this->className;
             return new $class($row, $this->conf['id'], false);
         } else {
-            return new Record($row, $this->conf['id'], false);
+            return new BaseModel($row, $this->conf['id'], false);
         }
     }
     
     /**
      * 得到当前对象
      * 
-     * @return Record
+     * @return BaseModel
      */
     function fetch() {
         return $this->current();
@@ -92,7 +92,7 @@ class ObjectSet implements  Countable,Iterator {
     /**
      * 得到当前对象
      *
-     * @return Record
+     * @return BaseModel
      */
     function current() {
         return isset($this->rs[$this->pos]) ? $this->rs[$this->pos] : null;

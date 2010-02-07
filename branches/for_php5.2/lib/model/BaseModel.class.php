@@ -3,7 +3,7 @@
  * 记录对象
  *
  */
-class Record {
+class BaseModel {
     protected $row;
     protected $isNew;
     protected $id;

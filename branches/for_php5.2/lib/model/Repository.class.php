@@ -200,20 +200,20 @@ class Repository {
     /**
      * 创建一个新对象
      *
-     * @return Record
+     * @return BaseModel
      */
     function createNew() {
-        $class = class_exists($this->className) ? $this->className : 'Record';
+        $class = class_exists($this->className) ? $this->className : 'BaseModel';
         return new $class(array(), $this->conf['id'], true);
 	}
     
     /**
      * 创建用于更新的数据对象
      *
-     * @return Record
+     * @return BaseModel
      */
     function createForUpdate() {
-        $class = class_exists($this->className) ? $this->className : 'Record';
+        $class = class_exists($this->className) ? $this->className : 'BaseModel';
 		return new $class(array(), $this->conf['id'], false);
 	}
 
@@ -221,7 +221,7 @@ class Repository {
      * 找到符号条件的第一个对象
      * 
      * @param Query $query 查询对象
-     * @return Record
+     * @return BaseModel
      */
     function find($query, $params = array()) {
         $query->limit(1);
@@ -233,7 +233,7 @@ class Repository {
      * 根据主键查找对象
      *
      * @param mixed $id
-     * @return Record
+     * @return BaseModel
      */
     function findById($id, $properties = null) {
         $id_prop = $this->conf['id'];
@@ -245,7 +245,7 @@ class Repository {
      * 根据主键查找对象
      *
      * @param array $ids
-     * @return Record
+     * @return BaseModel
      * @deprecated
      */
     function findByIds($ids, $properties = null) {
@@ -256,7 +256,7 @@ class Repository {
      * 根据主键查找对象
      *
      * @param array $ids
-     * @return Record
+     * @return BaseModel
      */
     function findAllById($ids, $properties = null) {
         $id_prop = $this->conf['id'];
@@ -329,7 +329,7 @@ class Repository {
     /**
      * 新增一个对象
      * 
-     * @param Record $obj
+     * @param BaseModel $obj
      * @param array $param
      * @return int
      */
@@ -359,25 +359,25 @@ class Repository {
     /**
      * 更新一个对象
      *
-     * @param Record $obj
+     * @param array $map
      * @param array $cond
      * @return int
      */
-    function update($obj, $cond, $param = array()) {
+    function update($map, $cond, $param = array()) {
         foreach ($this->beforeUpdateCallbacks as $callback) {
-            call_user_func($callback, $obj, $cond, $param);
+            call_user_func($callback, $map, $cond, $param);
         }
-        $row = $obj->rawData();
+        
         $query = array(
             'class' => $this->className,
-            'data' => $row,
+            'data' => $map,
             'condition' => $cond
         );
         
         $ret = $this->execQuery('update', $query, $param);
         
-        foreach ($this->beforeUpdateCallbacks as $callback) {
-            call_user_func($callback, $obj, $cond, $param, $ret);
+        foreach ($this->afterUpdateCallbacks as $callback) {
+            call_user_func($callback, $map, $cond, $param, $ret);
         }
         return $ret;
     }
@@ -385,7 +385,7 @@ class Repository {
     /**
      * 保存一个对象，根据对象状态自动新增或更新
      *
-     * @param Record $obj
+     * @param BaseModel $obj
      * @return int
      */
     function save($obj) {
@@ -398,7 +398,7 @@ class Repository {
             $idProp = $this->conf['id'];
             $id = $obj->getId();
             $cond = array_combine((array)$idProp, (array)$id);
-            $ret = $this->update($obj, $cond);
+            $ret = $this->update($obj->rawData(), $cond);
         }
         foreach ($this->afterSaveCallbacks as $callback) {
             call_user_func($callback, $obj, $ret);
