@@ -3,7 +3,7 @@
 class AppClassLoader {
     private $classMap = array();
     private $appDir;
-	private $externDir = array();
+    private $externDir = array();
     private $cacheFile;
     
     function __construct($appDir, $cacheFile = null) {
@@ -72,7 +72,7 @@ class AppClassLoader {
         $this->writeCache();
     }
     
-    function _scan($dir) {
+    private function _scan($dir) {
         foreach (glob("$dir/*", GLOB_ONLYDIR) as $d) {
             $this->_scan($d);
         }

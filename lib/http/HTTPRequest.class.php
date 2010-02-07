@@ -281,9 +281,9 @@ class HTTPRequest {
         return isset($_SERVER[$key]) ? $_SERVER[$key] : $default;
     }
     
-    function session($name) {
+    function getSession() {
         $sess = Session::getInstance();
-        return $sess[$name];
+        return $sess;
     }
     /**
      * 转发 http 请求，会携带请求中的主要 header
@@ -436,5 +436,21 @@ class Session implements ArrayAccess {
     
     function OffsetSet($offset, $value) {
         $_SESSION[$offset] = $value;
+    }
+    
+    function set($key, $value) {
+        return $this->OffsetSet($key, $value);
+    }
+    
+    function get($key) {
+        return $this->OffsetGet($key);
+    }
+    
+    function remove($key) {
+        return $this->OffsetUnset($key);
+    }
+    
+    function has($key) {
+        return $this->OffsetExists($key);
     }
 }

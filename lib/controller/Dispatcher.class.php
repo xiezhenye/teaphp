@@ -86,14 +86,6 @@ class Dispatcher {
 	}
         $conf = $this->app->conf('route');
 	foreach ($conf as $conf_key => $conf_item) {
-	    if (!isset($conf_item['patterns']['_action']) &&
-		!isset($conf_item['params']['_action'])) {
-		$conf_item['patterns']['_action'] = '\w+';
-	    }
-	    if (!isset($conf_item['patterns']['_method']) &&
-		!isset($conf_item['params']['_method'])) {
-		$conf_item['patterns']['_method'] = '\w+';
-	    }
 	    $map = array();
 	    $ci = $conf_item;
 	    foreach ($params as $param_name=>$param_value) {
@@ -105,6 +97,11 @@ class Dispatcher {
 		    continue 1;
 		}
 		if (!isset($ci['patterns'][$param_name])) {
+		    //默认方法名
+		    if ($param_name == '_method' &&
+			rawurlencode($param_value) == $map['{_action}']) {
+			continue 1;
+		    }
 		    continue 2;
 		}
 		$sub_pattern = '(^'.$conf_item['patterns'][$param_name].'$)i';

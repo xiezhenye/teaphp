@@ -29,10 +29,9 @@ class App {
      * @return Mysql
      */
     function getDB($name = 'default') {
-        $db = array();
+        static $db = array();
         if (!isset($db[$name])) {
             $dbConf = $this->conf('resource', 'database');
-        
             if (!isset($dbConf[$name]['host']) || !isset($dbConf[$name]['name'])) {
                 return null;
             }
@@ -41,18 +40,34 @@ class App {
         return $db[$name];
     }
     
+    function getClassModule($class_name) {
+        $path = $this->classLoader->pathOf($class_name);
+        $path = substr($path, strlen($this->path));
+        
+        if (!StringUtil::beginWith($path, '/modules/')) {
+            return null;
+        }
+        $arr = explode('/', $path);
+        return $arr[2];
+    }
+    
     /**
      * 根据配置得到仓储实例
      *
-     * @param string $module
      * @param string $class
      * @return Repository
      */
-    function getRepository($module, $class) {
-        $conf = $this->moduleConf($module, $class.'.model');
-        if (!$conf) {
-            throw new Exception("no such model '$class' config in module $module.");
+    function getRepository($class) {
+        $module = $this->getClassModule($class);
+        if (!$module) {
+            throw new Exception("class '$class' not defined.");
         }
+        $conf = $this->moduleConf($module, $class.'.model');
+        
+        if (!$conf) {
+            throw new Exception("no such model '$class' config in module '$module'.");
+        }
+        
         if (!isset($this->repositories[$class])) {
             if (isset($conf['repository'])) {
                 $repoClass = $conf['repository'];
@@ -60,7 +75,6 @@ class App {
             } else {
                 $ret = new Repository();
             }
-            
             $ret->setClass($class);
             $ret->setConfig($conf);
             $dbName = isset($conf['db']) ? $conf['db'] : 'default';
@@ -74,7 +88,6 @@ class App {
      * 根据配置得到分派器实例
      *
      * @return Dispatcher
-     * @deprecated
      */
     function getDispatcher() {
         if (is_null($this->dispatcher)) {
@@ -91,10 +104,10 @@ class App {
         return $this->arrayPath($ret, $path, $default);
     }
     
-    function moduleConf($module, $confName, $path = '', $default = null) {
-        $key = "$module/$confName";
+    function moduleConf($module, $conf_name, $path = '', $default = null) {
+        $key = "$module/$conf_name";
         if (!isset($this->conf[$key])) {
-            $conf_file = $this->path.'/modules/'.$module.'/'.$confName.'.conf.php';
+            $conf_file = $this->path.'/modules/'.$module.'/conf/'.$conf_name.'.conf.php';
             $this->conf[$key] = include $conf_file;
         }
         $ret = $this->conf[$key];

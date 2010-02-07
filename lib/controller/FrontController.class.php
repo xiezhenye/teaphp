@@ -52,7 +52,7 @@ class FrontController {
         }
         if (! method_exists($class_name, $method_name)) {
             $response->sendStatusHeader(404);
-            echo "no $module_name $methodName\n";
+            echo "no $action_name $method_name\n";
             return;
         }
         
@@ -66,7 +66,7 @@ class FrontController {
                 $action->addBeforeActionCallback($callback);
             }
             $after_callbacks = $this->app->conf('app', "actions/$type/hooks/after'", array());
-            foreach ($before_callbacks as $callback) {
+            foreach ($after_callbacks as $callback) {
                 $action->addAfterActionCallback($callback);
             }
             
