@@ -5,7 +5,7 @@
  * 
  */
 class PHPView extends BaseView{
-    const JSON = 'json';
+    const JSON = '_json';
     
     public $_tplDir = array();
     
@@ -45,9 +45,9 @@ class PHPView extends BaseView{
     private function init() {
         $param = $this->_request->allParams();
         
-        $this->_tplDir['module'] = $this->_appPath . "/modules/".$param['module'] .
-                                "/templates/" . $param['type'];
-        $this->_tplDir['app'] = $this->_appPath . '/templates/' . $param['type'];
+        $this->_tplDir['module'] = $this->_appPath . "/modules/".$this->_module .
+                                "/templates/" . $param['_type'];
+        $this->_tplDir['app'] = $this->_appPath . '/templates/' . $param['_type'];
         $this->_tplDir['extern'] = isset($this->_conf['extern']) ? $this->_conf['extern'] : '';
         if (!isset($this->_conf['status'])) {
             $this->_conf['status'] = 'app';
@@ -180,15 +180,15 @@ class PHPView extends BaseView{
     /**
      * 调用模块的 Block 动作
      *
-     * @param string $module 模块名
+     * @param string $module Action名
      * @param string $method 方法名
      * @param array $params request参数
      */
-    function useBlock($module, $method, $params = array()) {
-        $params['module'] = $module;
-        $params['method'] = $method;
-        $params['type'] = 'block';
-        $params['view'] = 'PHPView';
+    function useBlock($action, $method, $params = array()) {
+        $params['_action'] = $action;
+        $params['_method'] = $method;
+        $params['_type'] = 'block';
+        $params['_view'] = 'PHPView';
         $request = new HTTPRequest($params);
         $old = $_SERVER['REQUEST_METHOD'];
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -417,13 +417,13 @@ class v {
     /**
      * 输出资源的 url 地址
      *
-     * @param string $uri 可以使用 printf 样式占位符
-     * @param mixed ... 参数
+     * @param array $params
      */
-    static function urlFor() {
-        $args = func_get_args();
-        $call = array(end(self::$tpl)->_dispatcher, 'urlFor');
-        $url = call_user_func_array($call, $args);
+    static function urlFor($type, $action, $method = null, $params = array()) {
+        $params['_type'] = $type;
+        $params['_action'] = $action;
+        $params['_method'] = is_null($method) ? $action : $method;
+        $url = end(self::$tpl)->_dispatcher->urlFor($params);
         echo $url;
     }
     

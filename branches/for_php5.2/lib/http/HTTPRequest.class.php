@@ -43,7 +43,7 @@ class HTTPRequest {
     
     /**
      *
-     * @param array $param 路由请求参数
+     * @param array $params 路由请求参数
      */
     function __construct($params = array()) {
         $this->params = $params;

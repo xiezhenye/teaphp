@@ -1,34 +1,22 @@
 <?php
 
 class BaseAction {
-    /**
-     * @var Dispatcher
-     */
-    protected $dispatcher;
     
     /**
      *
-     * @var FrontContrlller
+     * @var App
      */
-    protected $controller;
+    protected $app;
     
     private $beforeActionCallbacks = array();
     private $afterActionCallbacks = array();
     
     /**
      *
-     * @param Dispatcher $dispatcher
+     * @param App $app
      */
-    function setDispatcher($dispatcher) {
-        $this->dispatcher = $dispatcher;    
-    }
-    
-    /**
-     *
-     * @param FrontContrlller $controller
-     */
-    function setController($controller) {
-        $this->controller = $controller;    
+    function setApp($app) {
+        $this->app = $app;
     }
     
     function addBeforeActionCallback($callback) {
@@ -75,5 +63,12 @@ class BaseAction {
             $method = 'set' . ucfirst($aProperty);
             call_user_func(array($obj, $method), $request->post($aProperty));
         }
+    }
+    
+    function moduleName() {
+        $class_name = get_class($this);
+        $class_path = $this->app->getClassLoader()->pathOf($class_name);
+        $arr = explode('/', $class_path);
+        return $arr[count($arr) - 3];
     }
 }
