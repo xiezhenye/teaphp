@@ -30,18 +30,20 @@ class FrontController {
         $this->view = $view;
     }
     
+
+    
     /**
      * 调用控制器
      *
-     * @param string $module_name 模块名
+     * @param string $action_name 模块名
      * @param string $type 动作类型
      * @param string $http_method http方法名
      * @param string $method 方法名
      * @param HTTPRequest $request
      * @param HTTPResponse $response
      */
-    function call($module_name, $type, $http_method, $method, $request, $response) {
-        $class_name = StringUtil::camelize($module_name) . ucfirst($type);
+    function call($action_name, $type, $http_method, $method, $request, $response) {
+        $class_name = StringUtil::camelize($action_name) . ucfirst($type);
         $method_name = strtolower($http_method).StringUtil::camelize($method);
         if (!class_exists($class_name)) {
             $response->sendStatusHeader(404);
@@ -68,8 +70,8 @@ class FrontController {
                 $action->addAfterActionCallback($callback);
             }
             
-            $action->setDispatcher($this->app->getDispatcher());
-            $action->setController($this);
+            $action->setApp($this->app);
+            
             $ret = $action->beforeAction($method_name, $request);
             if (is_null($ret)) {
                 if (method_exists($action, $method_name)) {
@@ -78,13 +80,14 @@ class FrontController {
                     throw new Exception('no such method');
                 }
             }
-            $default_view = $module_name.'_'.$method;
+            $default_view = $action_name.'_'.$method;
             if (!array_key_exists(0, $ret)) {
                 $ret = array($ret, $default_view);
             } elseif (!isset($ret[1])) {
                 $ret[1] = $default_view;
             }
             $action->afterAction($method_name, $request, $ret);
+            $this->view->setModule($action->moduleName());
             $this->view->render($ret[0], $ret[1]);
         } catch (ActionException $e) {
             $ret = $e->getActionReturn();

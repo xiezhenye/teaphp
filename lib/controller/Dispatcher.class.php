@@ -5,10 +5,6 @@
  */
 class Dispatcher {
     /**
-     * @var string
-     */
-    protected $appPath;
-    /**
      * @var array
      */
     protected $conf;
@@ -23,7 +19,6 @@ class Dispatcher {
      */
     function __construct($app) {
         ErrorWrapperException::bind();
-        $this->appPath = $app->path();
         $this->conf = $app->conf('app');
 	$this->app = $app;
     }
@@ -34,7 +29,7 @@ class Dispatcher {
      * @param HTTPRequest $request
      */
     function dispatch($url, $request) {
-        $params = $this->parse($url, $request, $this->conf);
+        $params = $this->parse($url, $request, $this->app->conf('route'));
         if (empty($params)) {
             HTTPResponse::getInstance()->sendStatusHeader(404);
             return;
@@ -43,15 +38,16 @@ class Dispatcher {
     }
    
     function doDispatch($params, $request) {
-        $type = $params['type'];
-        $viewName = $params['view'];
-        $conf = isset($this->conf['actions'][$type]['view'][$viewName])
-            ? $this->conf['actions'][$type]['view'][$viewName]
-            : array();
-        $response = HTTPResponse::getInstance(); 
+        $type = $params['_type'];
+        $viewName = $params['_view'];
+        $conf = $this->app->conf('app', "actions/$type/view/$viewName", array());
+        $response = HTTPResponse::getInstance();
+	/** @var BaseView */
         $view = new $viewName($conf);
         $view->setDispatcher($this);
-        $view->setAppPath($this->appPath);
+        $view->setAppPath($this->app->path());
+	
+	
 	if (method_exists($view, 'setRequest')) {
 	    $view->setRequest($request);
 	}
@@ -62,8 +58,8 @@ class Dispatcher {
             return;
         }
         
-        if (!isset($params['method'])) {
-            $params['method'] = $params['module'];
+        if (!isset($params['_method'])) {
+            $params['_method'] = $params['_action'];
         }
         
         $request->setParams($params);
@@ -71,10 +67,10 @@ class Dispatcher {
         $controller = new FrontController($this->app);
         $controller->setView($view);
         $view->setController($controller);
-        $controller->call($params['module'],
+        $controller->call($params['_action'],
                           $type,
                           $request->method(true),
-                          $params['method'],
+                          $params['_method'],
                           $request,
                           $response);
 
@@ -84,8 +80,66 @@ class Dispatcher {
      * 输出资源的 url 地址
      *
      */
-    function urlFor($module, $action, $method, $type) {
-        
+    function urlFor($params) {
+	if (!isset($params['_method'])) {
+	    $params['_method'] = $params['_action'];
+	}
+        $conf = $this->app->conf('route');
+	foreach ($conf as $conf_key => $conf_item) {
+	    if (!isset($conf_item['patterns']['_action']) &&
+		!isset($conf_item['params']['_action'])) {
+		$conf_item['patterns']['_action'] = '\w+';
+	    }
+	    if (!isset($conf_item['patterns']['_method']) &&
+		!isset($conf_item['params']['_method'])) {
+		$conf_item['patterns']['_method'] = '\w+';
+	    }
+	    $map = array();
+	    $ci = $conf_item;
+	    foreach ($params as $param_name=>$param_value) {
+		if (isset($ci['params'][$param_name])) {
+		    if ($ci['params'][$param_name] != $param_value) {
+		        continue 2;
+		    }
+		    unset($ci['params'][$param_name]);
+		    continue 1;
+		}
+		if (!isset($ci['patterns'][$param_name])) {
+		    continue 2;
+		}
+		$sub_pattern = '(^'.$conf_item['patterns'][$param_name].'$)i';
+		if (!preg_match($sub_pattern, $param_value)) {
+		    continue 2;
+		}
+		unset($ci['patterns'][$param_name]);
+		$map['{'.$param_name.'}'] = rawurlencode($param_value);
+	    }
+	    if (empty($ci['patterns']) && empty($ci['params'])) {
+		$ret = strtr($conf_key, $map);
+		return $ret;
+	    }
+	}
+	return '';
+    }
+    
+    function buildRegex($conf_key, $conf_item) {
+	if (!isset($conf_item['patterns']['_action'])) {
+	    $conf_item['patterns']['_action'] = '\w+';
+	}
+	if (!isset($conf_item['patterns']['_method'])) {
+	    $conf_item['patterns']['_method'] = '\w+';
+	}
+	$map = array();
+	foreach ($conf_item['patterns'] as $k=>$v) {
+	    //if (!preg_match('/^\:?\w+$/S', $k)) {
+	    //	throw new Exception('bad param name');
+	    //}
+	    $map['{'.$k.'}'] = '(?P<'.$k.'>'.$v.')';
+	}
+	$conf_key = strtr(preg_quote($conf_key), array('\{'=>'{', '\}'=>'}'));
+	
+	$regex = '(^'.strtr($conf_key, $map).'$)i';
+	return $regex;
     }
     
     /**
@@ -97,43 +151,35 @@ class Dispatcher {
      */
     function parse($url, $request, $conf) {
 	$parsed = parse_url($url);
-        foreach ($conf['route'] as $regexp => $map) {
-	    $path = $parsed['path'];
-	    if (StringUtil::beginWith($path, $this->getBaseUrl())) {
-		$path = substr($path, strlen($this->getBaseUrl()));
-	    }
-            $matched = preg_match("($regexp)i", $path, $m);
-            if (! $matched) { //没有匹配规则转到下一条 
+	$path = $parsed['path'];
+	if (StringUtil::beginWith($path, $this->getBaseUrl())) {
+	    $path = substr($path, strlen($this->getBaseUrl()));
+	}
+        foreach ($conf as $conf_key => $conf_item) {
+	    $regex = $this->buildRegex($conf_key, $conf_item);
+            $matched = preg_match($regex, $path, $m);
+            if (!$matched) { //没有匹配规则转到下一条 
                 continue;
             }
             unset($m[0]);
-            foreach ($map as $k => $v) {
-                if (is_int($k)) {
-                    $ret[$v] = rawurldecode($m[$k + 1]);
-                    unset($m[$k + 1]);
-                } else {
-                    $ret[$k] = $v;
-                }
-            }
-            
-            $p = array();
-            foreach ($m as $v) {
-                $p[]= urldecode($v);
-            }
-            
-            $ret['path'] = $parsed['path'];
-            $ret['query'] = array();
-            isset($parsed['query']) ? parse_str($parsed['query'], $ret['query']) : array();
-            $_GET = $ret['query'];
+	    foreach ($conf_item['params'] as $k => $v) {
+		$m[$k] = $v;
+	    }
+	    $ret = array_map('rawurldecode', $m);
+            $ret['_path'] = $parsed['path'];
+            $ret['_query'] = array();
+            if (isset($parsed['query'])) {
+		parse_str($parsed['query'], $ret['_query']);
+	    }
+            $_GET = $ret['_query'];
             HTTPRequest::autoStripslashes();
-            //$ret['path_seperated'] = array_slice(explode('/', $ret['path']), 1);
-            $ret['params'] = $p;
-	    if (!isset($ret['view'])) {
+            //$ret['_path_seperated'] = array_slice(explode('/', $ret['path']), 1);
+	    if (!isset($ret['_view'])) {
 		$accepts = array_map('trim', explode(',', $request->accept()));
 		if (in_array('text/json', $accepts)) {
-			$ret['view'] = 'JSONView';
+		    $ret['_view'] = 'JSONView';
 		} else {
-			$ret['view'] = 'PHPView';
+		    $ret['_view'] = 'PHPView';
 		}
 	    }
             return $ret;
@@ -142,7 +188,7 @@ class Dispatcher {
     }
     
     function getBaseUrl() {
-        return $this->conf['url']['base'];
+        return $this->conf['base_url'];
     }
 }
 

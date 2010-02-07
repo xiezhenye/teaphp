@@ -28,11 +28,14 @@ abstract class BaseView {
      */
     public $_dispatcher;
     
+    protected $_module;
+    
     /**
      *
      * @var FrontController
      */
     public $_controller;
+    
     /**
      * 设置应用目录
      *
@@ -44,6 +47,14 @@ abstract class BaseView {
     
     function setResponse($resp) {
         $this->response = $resp;
+    }
+    
+    /**
+     *
+     * @param string $module_name
+     */
+    function setModule($module_name) {
+        $this->_module = $module_name;
     }
     
     /**
