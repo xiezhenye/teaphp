@@ -80,7 +80,7 @@ class Dispatcher {
      * 输出资源的 url 地址
      *
      */
-    function urlFor($params, $with_base_url = true) {
+    function urlFor($params, $query = array(), $with_base_url = true) {
 	if (!isset($params['_method'])) {
 	    $params['_method'] = $params['_action'];
 	}
@@ -115,6 +115,10 @@ class Dispatcher {
 		$ret = strtr($conf_key, $map);
 		if ($with_base_url) {
 		    $ret = $this->app->conf('app', 'base_url').$ret;
+		}
+		$qstr = http_build_query($query);
+		if ($qstr != '') {
+		    $ret.= '?'.$qstr;
 		}
 		return $ret;
 	    }
