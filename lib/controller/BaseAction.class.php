@@ -79,4 +79,21 @@ class BaseAction {
         $ret = $this->app->getDispatcher()->urlFor($params);
         return $ret;
     }
+    
+    function httpReturn($code, $view = BaseView::NULL) {
+        $ret = array(array('response_code'=>$code), $view);
+        return $ret;
+    }
+    
+    function httpReturn404($view = BaseView::NULL) {
+        return $this->httpReturn(404, $view);
+    }
+    
+    function httpReturn403($view = BaseView::NULL) {
+        return $this->httpReturn(403, $view);
+    }
+    
+    function httpReturn500($view = BaseView::NULL) {
+        return $this->httpReturn(500, $view);
+    }
 }
