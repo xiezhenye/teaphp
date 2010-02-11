@@ -337,7 +337,11 @@ class v {
     static function loadTpl($dir, $tplName, $extraData) {
         extract(end(self::$tpl)->_data);
         extract($extraData);
-        include $dir . '/'. $tplName . '.tpl.php';
+        try {
+            include $dir . '/'. $tplName . '.tpl.php';
+        } catch (Exception $e) {
+            //
+        }
     }
     
     /**
