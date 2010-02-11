@@ -4,6 +4,8 @@
  *
  */
 class Repository {
+    protected static $isNew = array();
+    
     protected $className;
     protected $conf;
     /**
@@ -204,7 +206,9 @@ class Repository {
      */
     function createNew() {
         $class = class_exists($this->className) ? $this->className : 'BaseModel';
-        return new $class(array(), $this->conf['id'], true);
+        $ret = new $class(array(), $this->conf['id'], true);
+        self::setNew($ret);
+        return $ret;
 	}
     
     /**
@@ -469,5 +473,15 @@ class Repository {
             $a[$k] = $v;
         }
         return $a;
+    }
+    
+    static function isNew($obj) {
+        $key = spl_object_hash($obj);
+        return isset(self::$isNew[$key]);
+    }
+    
+    protected function setNew($obj) {
+        $key = spl_object_hash($obj);
+        self::$isNew[$key] = 1;
     }
 }
