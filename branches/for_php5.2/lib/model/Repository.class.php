@@ -214,6 +214,7 @@ class Repository {
     /**
      * 创建用于更新的数据对象
      *
+     * @deprecated
      * @return BaseModel
      */
     function createForUpdate() {
@@ -349,7 +350,8 @@ class Repository {
         $ret = $this->execQuery('insert', $query, $param);
         if ($ret) {
             $id = $this->getDB($query)->lastId();
-            if ($id > 0) { 
+            if ($id > 0) {
+                self::setNew($obj, false);
                 $obj->saved($id);
             }
         }
@@ -396,7 +398,7 @@ class Repository {
         foreach ($this->beforeSaveCallbacks as $callback) {
             call_user_func($callback, $obj);
         }
-        if ($obj->isNew()) {
+        if (self::isNew($obj)) {
             $ret = $this->add($obj);
         } else {
             $idProp = $this->conf['id'];
@@ -477,11 +479,11 @@ class Repository {
     
     static function isNew($obj) {
         $key = spl_object_hash($obj);
-        return isset(self::$isNew[$key]);
+        return isset(self::$isNew[$key]) && self::$isNew[$key];
     }
     
-    protected function setNew($obj) {
+    protected static function setNew($obj, $bool = true) {
         $key = spl_object_hash($obj);
-        self::$isNew[$key] = 1;
+        self::$isNew[$key] = $bool;
     }
 }
