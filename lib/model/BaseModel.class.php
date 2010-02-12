@@ -5,7 +5,6 @@
  */
 class BaseModel {
     protected $row;
-    protected $isNew;
     protected $id;
     protected $attaches = array();
     
@@ -45,7 +44,7 @@ class BaseModel {
         }
 		
 	}
-    
+	
     function set($name, $value) {
         return call_user_func(array($this, 'set'.ucfirst($name)), $value);
     }
@@ -64,14 +63,6 @@ class BaseModel {
             $ret[$name] = $attach instanceof Record ? $attach->rawData() : $attach;
         }*/
         return $ret;
-    }
-    
-	/**
-	 * 是否是新建对象
-	 * @return bool
-	 */
-    function isNew() {
-        return $this->isNew;
     }
     
 	/**
