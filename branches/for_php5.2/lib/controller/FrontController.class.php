@@ -80,7 +80,8 @@ class FrontController {
                     throw new Exception('no such method');
                 }
             }
-            $default_view = $action_name.'_'.$method;
+            //$default_view = $action_name.'_'.$method;
+            $default_view = $method;
             if (!array_key_exists(0, $ret)) {
                 $ret = array($ret, $default_view);
             } elseif (!isset($ret[1])) {
