@@ -542,7 +542,7 @@ class v {
         echo 'document.'.$form.'.submit();\' value="'.htmlspecialchars($text, ENT_QUOTES).'" />';
     }
     
-    static function selectOption($data, $default = null) {
+    static function selectOptions($data, $default = null) {
         $option = '';
         foreach ($data as $key => $val) {
             $selected = '';
@@ -550,6 +550,21 @@ class v {
             $option .= "<option value=\"$key\"$selected>$val</option>\n";
         }
         return $option;
+    }
+    
+    static function radioBoxGroup($name, $data, $default = null) {
+        $out = '';
+        foreach ($data as $key => $val) {
+            $checked = '';
+            if ($val == $default) {
+                $checked = 'checked="checked" ';
+            }
+            $out.= '<label><input type="radio" '.$checked.
+                    'name="'.htmlspecialchars($name).
+                    '" value="'.htmlspecialchars($val).'">'.
+                    htmlspecialchars($key).'</label>';
+        }
+        echo "<span class='radioBoxGroup'>$out</span>";
     }
     
     /**
@@ -579,6 +594,7 @@ class v {
             echo '</div>';
         }
     }
+    
     
 }
 
