@@ -24,6 +24,19 @@ class Repository {
     protected $beforeFindCallbacks = array();
     protected $beforeSaveCallbacks = array();
     
+    protected $callbacks = array(
+                        'before_add'=>array(),
+                        'before_delete'=>array(),
+                        'before_update'=>array(),
+                        'before_find'=>array(),
+                        'before_save'=>array(),
+                        
+                        'after_add'=>array(),
+                        'after_delete'=>array(),
+                        'after_update'=>array(),
+                        'after_find'=>array(),
+                        'after_save'=>array(),
+                    );
     protected $afterAddCallbacks = array();
     protected $afterDeleteCallbacks = array();
     protected $afterUpdateCallbacks = array();
@@ -150,7 +163,7 @@ class Repository {
         }
         $rs = $this->getDB($query_array)->query($sql);
         $ret = new ObjectSet($rs, $this->className, $this->conf);
-        foreach ($this->afterFindCallbacks as $callback) {
+        foreach ($this->callbacks['after_find'] as $callback) {
             call_user_func($callback, $obj, $param, $ret);
         }
         return $ret;
@@ -163,7 +176,7 @@ class Repository {
      * @return ObjectSet
      */
     function findAll($query, $params = array()) {
-        foreach ($this->beforeFindCallbacks as $callback) {
+        foreach ($this->callbacks['before_find'] as $callback) {
             call_user_func($callback, $obj, $param);
         }
         $query->from($this->className);
@@ -339,7 +352,7 @@ class Repository {
      * @return int
      */
     function add($obj, $param = array()) {
-        foreach ($this->beforeAddCallbacks as $callback) {
+        foreach ($this->callbacks['before_add'] as $callback) {
             call_user_func($callback, $obj, $param);
         }
         $row = $obj->rawData();
@@ -355,7 +368,7 @@ class Repository {
                 $obj->saved($id);
             }
         }
-        foreach ($this->afterAddCallbacks as $callback) {
+        foreach ($this->callbacks['after_add'] as $callback) {
             call_user_func($callback, $obj, $param, $ret, $id);
         }
         return $ret;
@@ -363,14 +376,14 @@ class Repository {
     
     
     /**
-     * 更新一个对象
+     * 更新一个或多个对象
      *
      * @param array $map
      * @param array $cond
      * @return int
      */
     function update($map, $cond, $param = array()) {
-        foreach ($this->beforeUpdateCallbacks as $callback) {
+        foreach ($this->callbacks['before_update'] as $callback) {
             call_user_func($callback, $map, $cond, $param);
         }
         
@@ -382,7 +395,7 @@ class Repository {
         
         $ret = $this->execQuery('update', $query, $param);
         
-        foreach ($this->afterUpdateCallbacks as $callback) {
+        foreach ($this->callbacks['after_update'] as $callback) {
             call_user_func($callback, $map, $cond, $param, $ret);
         }
         return $ret;
@@ -395,7 +408,7 @@ class Repository {
      * @return int
      */
     function save($obj) {
-        foreach ($this->beforeSaveCallbacks as $callback) {
+        foreach ($this->callbacks['before_save'] as $callback) {
             call_user_func($callback, $obj);
         }
         if (self::isNew($obj)) {
@@ -406,7 +419,7 @@ class Repository {
             $cond = array_combine((array)$idProp, (array)$id);
             $ret = $this->update($obj->rawData(), $cond);
         }
-        foreach ($this->afterSaveCallbacks as $callback) {
+        foreach ($this->callbacks['after_save'] as $callback) {
             call_user_func($callback, $obj, $ret);
         }
         return $ret;
@@ -419,7 +432,7 @@ class Repository {
      * @return int
      */
     function delete($cond, $param = array()) {
-        foreach ($this->beforeDeleteCallbacks as $callback) {
+        foreach ($this->callbacks['before_delete'] as $callback) {
             call_user_func($callback, $obj, $param);
         }
         $query = array(
@@ -427,7 +440,7 @@ class Repository {
             'condition' => $cond
         );
         $ret = $this->execQuery('delete', $query, $param);
-        foreach ($this->afterDeleteCallbacks as $callback) {
+        foreach ($this->callbacks['after_delete'] as $callback) {
             call_user_func($callback, $obj, $param, $ret);
         }
         return $ret;
@@ -485,5 +498,9 @@ class Repository {
     protected static function setNew($obj, $bool = true) {
         $key = spl_object_hash($obj);
         self::$isNew[$key] = $bool;
+    }
+    
+    function addCallback($event, $callback) {
+        $this->callbacks[$event][]= $callback;
     }
 }
