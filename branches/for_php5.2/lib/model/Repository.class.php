@@ -433,7 +433,7 @@ class Repository {
      */
     function delete($cond, $param = array()) {
         foreach ($this->callbacks['before_delete'] as $callback) {
-            call_user_func($callback, $obj, $param);
+            call_user_func($callback, $cond, $param);
         }
         $query = array(
             'class' => $this->className,
@@ -441,7 +441,7 @@ class Repository {
         );
         $ret = $this->execQuery('delete', $query, $param);
         foreach ($this->callbacks['after_delete'] as $callback) {
-            call_user_func($callback, $obj, $param, $ret);
+            call_user_func($callback, $cond, $param, $ret);
         }
         return $ret;
     }

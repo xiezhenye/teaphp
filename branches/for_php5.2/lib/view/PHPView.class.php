@@ -552,6 +552,12 @@ class v {
         return $option;
     }
     
+    static function select($name, $data, $default = null) {
+        echo '<select name="'.htmlspecialchars($name).'">';
+        echo self::selectOptions($data, $default);
+        echo '</select>';
+    }
+    
     static function radioBoxGroup($name, $data, $default = null) {
         $out = '';
         foreach ($data as $key => $val) {

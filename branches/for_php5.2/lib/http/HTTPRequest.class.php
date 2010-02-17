@@ -317,60 +317,70 @@ class HTTPRequest {
  * 
  */
 class UploadedFile {
-	private $file;
+    private $file;
     
     /**
      * 
      * @param array $fileArray
      */
-	function __construct($fileArray) {
-		$this->file = $fileArray;
-	}
+    function __construct($fileArray) {
+        $this->file = $fileArray;
+    }
     
     /**
      * 文件大小，单位：byte
      * 
      * @return int 
      */
-	function size() {
-		return $this->file['size'];
-	}
+    function size() {
+        return $this->file['size'];
+    }
     
     /**
      * 原始文件名
      *
      * @return string
      */
-	function name() {
-		return $this->file['name'];
-	}
+    function name() {
+        return $this->file['name'];
+    }
+    
+    /**
+     * 原始文件的扩展名
+     *
+     * @return string
+     */
+    function extName() {
+        $ret = strtolower(substr(strrchr($this->name(), '.'), 1));
+        return $ret;
+    }
     
     /**
      * 客户端提供的 MIME TYPE
      *
      * @return string
      */
-	function type() {
-		return $this->file['type'];
-	}
-	
+    function type() {
+        return $this->file['type'];
+    }
+    
     /**
      * 错误信息
      *
      * @return string
      */
-	function error() {
-		return $this->file['error'];
-	}
+    function error() {
+        return $this->file['error'];
+    }
     
     /**
      * 临时文件名
      *
      * @return string
      */
-	function tmpName() {
-		return $this->file['tmp_name'];
-	}
+    function tmpName() {
+        return $this->file['tmp_name'];
+    }
     
     /**
      * 将临时文件移动到目标路径
@@ -378,7 +388,7 @@ class UploadedFile {
      * @return bool
      */
     function moveTo($path) {
-            return move_uploaded_file($this->tmpName(), $path);
+        return move_uploaded_file($this->tmpName(), $path);
     }
     
 }
