@@ -6,6 +6,7 @@ class ThumbImage {
 	 * @param 缩略图路径 $dstFile
 	 * @param 缩略图宽度 $dstW
 	 * @param 缩略图高度 $dstH
+	 * @param 是否填充 $fill
 	 */
 	static function create($srcFile, $dstFile, $dstW, $dstH, $fill = false)
 	{
