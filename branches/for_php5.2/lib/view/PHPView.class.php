@@ -39,8 +39,13 @@ class PHPView extends BaseView{
     function setRequest($request) {
         $this->_request = $request;
     }
-    
-    
+    /**
+     *
+     * @return HTTPRequest
+     */
+    function getRequest() {
+        return $this->_request;
+    }
     
     private function init() {
         $param = $this->_request->allParams();
