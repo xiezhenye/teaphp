@@ -551,7 +551,9 @@ class v {
         $option = '';
         foreach ($data as $key => $val) {
             $selected = '';
-            if ($key == $default) $selected = ' selected="selected"';
+            if ($key == $default) {
+                $selected = ' selected="selected"';
+            }
             $option .= "<option value=\"$key\"$selected>$val</option>\n";
         }
         return $option;
@@ -565,15 +567,15 @@ class v {
     
     static function radioBoxGroup($name, $data, $default = null) {
         $out = '';
-        foreach ($data as $key => $val) {
+        foreach ($data as $value => $label) {
             $checked = '';
-            if ($val == $default) {
+            if ($value == $default) {
                 $checked = 'checked="checked" ';
             }
             $out.= '<label><input type="radio" '.$checked.
                     'name="'.htmlspecialchars($name).
-                    '" value="'.htmlspecialchars($val).'">'.
-                    htmlspecialchars($key).'</label>';
+                    '" value="'.htmlspecialchars($value).'">'.
+                    htmlspecialchars($label).'</label>';
         }
         echo "<span class='radioBoxGroup'>$out</span>";
     }
