@@ -40,6 +40,11 @@ class App {
         return $db[$name];
     }
     
+    /**
+     * 返回类所在的模块
+     * 对非模块中的类返回 null
+     * @return string
+     */
     function getClassModule($class_name) {
         $path = $this->classLoader->pathOf($class_name);
         $path = substr($path, strlen($this->path));
