@@ -52,7 +52,7 @@ class FrontController {
         }
         if (! method_exists($class_name, $method_name)) {
             $response->sendStatusHeader(404);
-            echo "no $action_name $method_name\n";
+            echo "no $class_name $method_name\n";
             return;
         }
         
