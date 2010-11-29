@@ -1,23 +1,50 @@
 <?php
-
+/**
+ * json视图
+ * @package view
+ */
 class JSONView extends BaseView {
-    function render($data, $tpl) {
+    const JSONP = '_jsonp';
+    
+    function transform($data, $tpl) {
         switch ($tpl) {
-        case BaseView::REDIRECT:
         case BaseView::SUCCESS:
         case BaseView::FAILURE:
         case BaseView::ERROR:
-            //HTTPResponse::getInstance()->sendStatusHeader(500);
             $ret = array($tpl => $data);
             break;
         case BaseView::NULL:
             $ret = null;
             break;
+        case BaseView::REDIRECT:
+            $url = $data['url'];
+            $this->redirect($url);
+            break;
         default:
             $ret = $this->toArray($data);
             break;
         }
-        echo json_encode($ret);
+        return $ret;
+    }
+    
+    function render($data, $tpl) {
+        $ret = $this->transform($data, $tpl);
+        if ($tpl == self::JSONP) {
+            if (isset($ret['jsonp_callback'])) {
+                $callback = $ret['jsonp_callback'];
+                unset($ret['jsonp_callback']);
+            } else {
+                $callback = 'jsonp_callback';
+            }
+            
+            $json = json_encode($ret);
+            $json = "$callback($json);";
+        } else {
+            $json = json_encode($ret);
+        }
+        $resp = HTTPResponse::getInstance();
+        $resp->contentType('application/json');
+        echo $json;
     }
     
     function toArray($data) {
@@ -50,6 +77,25 @@ class JSONView extends BaseView {
             'line' => $exception->getLine(),
         );
         echo json_encode(array('err'=>$ret));
+    }
+    
+    /**
+     *
+     * @param array $ret
+     * @param HTTPRequest $req
+     */
+    static function autoJSONP($ret, $req, $param_name = 'jsonp') {
+        $callback = $req->get($param_name);
+        if (empty($callback)) {
+            return $ret;
+        }
+        $ret['jsonp_callback'] = $callback;
+        if (isset($ret[0]) && isset($ret[1])) { // 已返回视图
+            $ret[1] = self::JSONP;
+        } else {
+            $ret = array($ret, self::JSONP);
+        }
+        return $ret;
     }
 }
 
