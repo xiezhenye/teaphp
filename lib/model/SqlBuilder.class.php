@@ -3,7 +3,7 @@
 /**
  * SqlBuilder
  * 从 Query 对象构造 SQL 语句
- *
+ * @package model
  * @author xiezhenye
  */
 class SqlBuilder {
@@ -199,20 +199,22 @@ class SqlBuilder {
         foreach ($cond as $key=>$value) {
             $item = '';
             if (is_string($key)) { // 'prop'=>'value'
+				$field = $this->getField($key);
                 if (is_array($value)) {
                     if (empty($value)) {
                         $item = '1 = 0';
-                    } else {
-                        $item = $this->getField($key).' in '.
-                            $this->getValue($value, $this->getFieldType($key));
+					} else {
+						$value = $this->getValue($value, $this->getFieldType($key));
+                        $item = $field.' in '.$value;
                     }
+				} elseif (is_object($value) && $value->type == 'between') {
+					$item = $this->buildRange($key, $value);
                 } else {
-                    $item = $this->getField($key).'='.
-                            $this->getValue($value, $this->getFieldType($key));
+                    $item = $field.'='.$this->getValue($value, $this->getFieldType($key));
                 }
-            } elseif (is_string($value)) {
+            } elseif (is_string($value)) { // 字符串表达式
                 $item = $this->buildComplexItem($value);
-            } elseif (is_array($value) && count($value) == 2) {
+            } elseif (is_array($value) && count($value) == 2) { // 用于复合属性
                 $item = $this->buildCond($this->getPropertyCond($value[0], $value[1]));
             } else {
                 continue;
@@ -232,6 +234,16 @@ class SqlBuilder {
         return $this->getField($this->_tempCurClass_, $prop);
     }
     
+	public function buildRange($prop, $range) {
+		$field = $this->getField($prop);
+		$item = $field . ($range->include_from ? '>=' : '>') .
+				$this->getValue($range->from) .
+				' and '.
+				$field . ($range->include_to ? '<=' : '<') .
+				$this->getValue($range->to);
+		return $item;
+	}
+	
     public function buildComplexItem($condItem) {
         if (is_null($this->_propertiesRegEx)) {
             $find = array();
@@ -278,7 +290,7 @@ class SqlBuilder {
         if (!is_array($prop)) {
             return array($prop=>$value);
         }
-        if (empty($value)) {
+        if (is_null($value)) {
             return array('0=1');
         }
         $excpt = 'the value not match the properties';

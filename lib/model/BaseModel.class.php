@@ -5,6 +5,7 @@
  */
 class BaseModel {
     protected $row;
+    protected $isNew;
     protected $id;
     protected $attaches = array();
     
@@ -44,7 +45,7 @@ class BaseModel {
         }
 		
 	}
-	
+    
     function set($name, $value) {
         return call_user_func(array($this, 'set'.ucfirst($name)), $value);
     }

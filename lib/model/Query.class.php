@@ -1,7 +1,7 @@
 <?php
 /**
  * 查询构造器
- *
+ * @package model
  */
 class Query {
     protected $query = array('condition'=>array());
@@ -12,8 +12,13 @@ class Query {
         }
     }
     
-    static function create() {
-        return new self;
+    /**
+     * 
+     * @param $cond
+     * @return Query
+     */
+    static function create($cond = null) {
+        return new self($cond);
     }
     
     /**
@@ -97,6 +102,16 @@ class Query {
     function page($page, $pageSize) {
         $offset = (($page > 1) ? $page - 1 : 0) * $pageSize;
         return $this->limit(array($offset => $pageSize));
+    }
+    
+    static function between($from, $to, $include_from = true, $include_to = false) {
+        $ret = new stdClass();
+        $ret->type = 'between';
+        $ret->from = $from;
+        $ret->to = $to;
+        $ret->includeFrom = $include_from;
+        $ret->includeTo = $include_to;
+        return $ret;
     }
 }
 
