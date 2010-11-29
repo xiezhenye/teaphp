@@ -1,7 +1,7 @@
 <?php
 /**
  * 分派器
- *
+ * @package controller
  */
 class Dispatcher {
     /**
@@ -30,6 +30,11 @@ class Dispatcher {
      */
     function dispatch($url, $request) {
         $params = $this->parse($url, $request, $this->app->conf('route'));
+            $uri = '/';
+        }
+        //HTTPRequest::autoStripslashes();
+        $request = HTTPRequest::getInstance();
+        $params = $this->parse($uri, $request, $this->conf);
         if (empty($params)) {
             HTTPResponse::getInstance()->sendStatusHeader(404);
             return;
@@ -48,9 +53,9 @@ class Dispatcher {
         $view->setAppPath($this->app->path());
 	
 	
-	if (method_exists($view, 'setRequest')) {
-	    $view->setRequest($request);
-	}
+		if (method_exists($view, 'setRequest')) {
+			$view->setRequest($request);
+		}
         $view->setResponse($response);
         
         if (is_null($params)) {
@@ -79,6 +84,8 @@ class Dispatcher {
     /**
      * 输出资源的 url 地址
      *
+     * @param string $uri 可以使用 printf 样式占位符
+     * @param mixed ... 参数
      */
     function urlFor($params, $query = array(), $with_base_url = true) {
 	if (!isset($params['_method'])) {
@@ -120,8 +127,8 @@ class Dispatcher {
 		if ($qstr != '') {
 		    $ret.= '?'.$qstr;
 		}
-		return $ret;
-	    }
+        return $ret;
+    }
 	}
 	return '';
     }
@@ -148,7 +155,7 @@ class Dispatcher {
     
     /**
      * 解析uri的参数
-     * 
+     *
      * @param string $url
      * @param HTTPRequest $request
      * @param array $conf
@@ -179,6 +186,9 @@ class Dispatcher {
             HTTPRequest::autoStripslashes();
             //$ret['_path_seperated'] = array_slice(explode('/', $ret['path']), 1);
 	    if (!isset($ret['_view'])) {
+			$request->setVar('get', $ret['query']);
+            $ret['path_seperated'] = array_slice(explode('/', $ret['path']), 1);
+            $ret['params'] = $p;
 		$accepts = array_map('trim', explode(',', $request->accept()));
 		if (in_array('text/json', $accepts)) {
 		    $ret['_view'] = 'JSONView';
@@ -190,6 +200,7 @@ class Dispatcher {
         }
         return null;
     }
+    
     
     function getBaseUrl() {
         return $this->conf['base_url'];

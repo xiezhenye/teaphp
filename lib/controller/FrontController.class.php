@@ -2,7 +2,7 @@
 
 /**
  * 前端控制器
- *
+ * @package controller
  */
 class FrontController {
     /**
@@ -29,8 +29,6 @@ class FrontController {
     function setView($view) {
         $this->view = $view;
     }
-    
-
     
     /**
      * 调用控制器

@@ -1,6 +1,13 @@
 <?php
-
+/**
+ * action基类
+ * @package controller
+ */
 class BaseAction {
+    /**
+     * @var Dispatcher
+     */
+    protected $dispatcher;
     
     /**
      *
