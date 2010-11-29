@@ -1,5 +1,8 @@
 <?php
-
+/**
+ *
+ * @package util
+ */
 class Validator {
     static function assertNotEmpty($v, $msg, $type = BaseView::FAILURE) {
         self::assert(!empty($v), $msg, $type);
@@ -41,5 +44,15 @@ class Validator {
     
     static function assertRegexMatch($v, $regex, $msg, $type = BaseView::FAILURE) {
         self::assert(preg_match($regex, $v), $msg, $type);
+    }
+    
+    static function assertNotNull($v, $msg, $type = BaseView::FAILURE) {
+        $is_null = is_null($v) || $v instanceof NullObject;
+        self::assert(!$v, $msg, $type);
+    }
+    
+    static function assertIsNull($v, $msg, $type = BaseView::FAILURE) {
+        $is_null = is_null($v) || $v instanceof NullObject;
+        self::assert($v, $msg, $type);
     }
 }
