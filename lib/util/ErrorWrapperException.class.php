@@ -1,6 +1,11 @@
 <?php
+/**
+ *
+ * @package util
+ */
 class ErrorWrapperException extends Exception {
     private static $binded = false;
+    
     function __construct($errno, $errstr, $errfile, $errline) {
         $this->code = $errno;
         $this->message = $errstr;
@@ -19,6 +24,13 @@ class ErrorWrapperException extends Exception {
         $types = E_ALL & ~E_NOTICE & ~E_STRICT;
         set_error_handler(array(__CLASS__, 'errorHandler'), $types);
         self::$binded = true;
+    }
+    
+    static function unbind() {
+        if (!self::$binded) {
+            return;
+        }
+        restore_error_handler();
     }
 }
 

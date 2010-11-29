@@ -3,7 +3,7 @@
 * Variable Stream Wraper
 *
 * @author xiezhenye <xiezhenye@gmail.com>
-* @since 2007-4-9
+* @package util
 */
 class VariableStreamWrapper {
     protected $position;
