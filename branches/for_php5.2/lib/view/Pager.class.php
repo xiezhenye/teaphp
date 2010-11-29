@@ -1,7 +1,7 @@
 <?php
 /**
  * 分页类
- * 
+ * @package view
  * @author xiezhenye
  */
 class Pager {
@@ -37,7 +37,7 @@ class Pager {
 	 * 
 	 */
 	function getHtml($current, $total, $pageSize, $urlPattern) {
-		$totalPage = ceil($total / $pageSize);
+		$totalPage = $total >= 0 ? intval(ceil($total / $pageSize)) : -1;
 		$find = array('{total}', '{first}', '{prev}', '{pages}', '{next}', '{last}');
 		$replace = array(
 						$this->getTotal($totalPage),
@@ -52,6 +52,10 @@ class Pager {
 	}
 	
 	function getPages($current, $totalPage, $urlPattern) {
+		if ($totalPage < 0) {
+			$pages = str_replace('{number}', $current, $this->currentPage);
+			return str_replace('{items}', $pages, $this->pages);
+		}
 		$center = ceil($this->itemsCount / 2) - 1;
 	    $begin = $current - $center;
 		$end = $current + $this->itemsCount - $center - 1;
@@ -72,7 +76,7 @@ class Pager {
 									  array($i, $this->replacePlacer($urlPattern, $i)),
 									  $this->pageLink);
 			} else {
-			    $pages .= str_replace('{number}', $i, $this->currentPage);
+			    $pages .= str_replace('{number}', $current, $this->currentPage);
 			}
 		}
 		return str_replace('{items}', $pages, $this->pages);
@@ -128,7 +132,7 @@ class Pager {
 	 */
 	function getNext($current, $total, $urlPattern)
 	{
-		if ($current < $total) {
+		if ($current < $total || $total < 0) {
 			return str_replace('{url}', $this->replacePlacer($urlPattern, $current + 1), $this->next);
 		}
 		return '';
@@ -141,6 +145,6 @@ class Pager {
 	 */
 	function getTotal($total)
 	{
-		return str_replace('{number}', $total, $this->total);
+		return str_replace('{number}', $total >=0 ? $total : '?', $this->total);
 	}
 }

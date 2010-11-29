@@ -2,7 +2,7 @@
 /**
  * PHPView
  * use php as template
- * 
+ * @package view
  */
 class PHPView extends BaseView{
     const JSON = '_json';
@@ -84,6 +84,7 @@ class PHPView extends BaseView{
             v::popTemplate();
             return;
         }
+        
         unset($_data);
         extract($this->_data);
         ob_start();
@@ -113,6 +114,10 @@ class PHPView extends BaseView{
     }
     
     function renderDefaultView($_data, $_tplName) {
+    	
+    	if ($_tplName == BaseView::NOTFOUND) {
+    		HTTPResponse::getInstance()->sendStatusHeader(404);
+    	}
         $path = $this->tplPath($this->_tplDir['extern'], $_tplName);
         if (is_file($path)) {
             if (isset($this->_conf['data'])) {
@@ -129,9 +134,15 @@ class PHPView extends BaseView{
         case BaseView::SUCCESS:
         case BaseView::FAILURE:
         case BaseView::ERROR:
+        case BaseView::NOTFOUND:
             // BaseView::SUCCESS 视图默认行为，跳转，如未设置 url 则到来源
-            $url = isset($_data['url']) ? $_data['url'] :
-            (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : strval($_data));
+            
+            if (isset($_data['url'])) {
+                $url = $_data['url'];
+            } else {
+                $ref = $this->_request->referer();
+                $url = $ref ? $ref : strval($_data);
+            }
             $code = isset($_data['response_code']) ? $_data['response_code'] : 302;
             $resp = HTTPResponse::getInstance();
             $resp->setFlashData(array(
@@ -607,7 +618,6 @@ class v {
             echo '</div>';
         }
     }
-    
     
 }
 

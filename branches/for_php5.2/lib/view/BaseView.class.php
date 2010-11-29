@@ -1,7 +1,7 @@
 <?php
 /**
  * BaseView
- * 
+ * @package view
  * 视图基类
  */
 abstract class BaseView {
@@ -12,6 +12,8 @@ abstract class BaseView {
     const FAILURE = '_failure';
     const ERROR = '_error';
     
+    const NOTFOUND = '_404';
+    const FOBIDDEN = '_403';
     
     protected $_appPath;
     /**
@@ -28,14 +30,11 @@ abstract class BaseView {
      */
     public $_dispatcher;
     
-    protected $_module;
-    
     /**
      *
      * @var FrontController
      */
     public $_controller;
-    
     /**
      * 设置应用目录
      *
@@ -47,14 +46,6 @@ abstract class BaseView {
     
     function setResponse($resp) {
         $this->response = $resp;
-    }
-    
-    /**
-     *
-     * @param string $module_name
-     */
-    function setModule($module_name) {
-        $this->_module = $module_name;
     }
     
     /**
@@ -98,4 +89,6 @@ abstract class BaseView {
      *
      */
     abstract function showError($exception);
+    
+    
 }
