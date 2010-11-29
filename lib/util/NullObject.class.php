@@ -4,7 +4,7 @@
  * 对属性读取，方法调用返回 NullObject，count()返回 0，
  * 对属性 is_set 返回 false
  * __toString 返回 ''
- *
+ * @package util
  */
 class NullObject implements Countable,ArrayAccess {
     static private $instance = null;

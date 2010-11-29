@@ -1,4 +1,8 @@
 <?php
+/**
+ * 标准输入输出
+ * @package util
+ */
 class Stdio {
     private static $stdin = null;
     private static $stdout = null;
@@ -37,7 +41,7 @@ class Stdio {
         self::$stdin = $fp;
     }
     
-    static function gets($size = 0) {
+    static function gets($size = 8192) {
         return fgets(self::getStdin(), $size);
     }
     
@@ -45,7 +49,7 @@ class Stdio {
         return fgetc(self::getStdin());
     }
     
-    static function readLine($size = 0) {
+    static function readLine($size = 8192) {
         return self::gets($size);
     }
     

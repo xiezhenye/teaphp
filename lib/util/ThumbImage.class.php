@@ -1,14 +1,17 @@
 <?php
+/**
+ *
+ * @package util
+ */
 class ThumbImage {
 	/**
 	 * 生成缩略图
 	 * @param 源图片路径 $srcFile
 	 * @param 缩略图路径 $dstFile
 	 * @param 缩略图宽度 $dstW
-	 * @param 缩略图高度 $dstH
-	 * @param 是否填充 $fill
+	 * @param 缩略图高度 $dstH 为0表示不限高度
 	 */
-	static function create($srcFile, $dstFile, $dstW, $dstH, $fill = false)
+	static function create($srcFile, $dstFile, $dstW, $dstH = 0, $fill = false)
 	{
 		$data = GetImageSize($srcFile);
 		switch ($data[2]) {
@@ -31,6 +34,11 @@ class ThumbImage {
 		
 		$srcW = ImageSX($srcImg);
 		$srcH = ImageSY($srcImg);
+		
+		if (!$dstH) {
+			$dstH = $srcH;
+		}
+		
 		$dstX = 0;
 		$dstY = 0;
 		
