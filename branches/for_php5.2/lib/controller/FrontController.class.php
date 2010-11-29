@@ -86,6 +86,7 @@ class FrontController {
                 $ret[1] = $default_view;
             }
             $action->afterAction($method_name, $request, $ret);
+
             $this->view->setModule($action->moduleName());
             $this->view->render($ret[0], $ret[1]);
         } catch (ActionException $e) {

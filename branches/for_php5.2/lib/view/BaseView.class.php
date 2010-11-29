@@ -30,6 +30,8 @@ abstract class BaseView {
      */
     public $_dispatcher;
     
+    protected $_module;
+    
     /**
      *
      * @var FrontController
@@ -46,6 +48,14 @@ abstract class BaseView {
     
     function setResponse($resp) {
         $this->response = $resp;
+    }
+    
+    /**
+     *
+     * @param string $module_name
+     */
+    function setModule($module_name) {
+        $this->_module = $module_name;
     }
     
     /**
