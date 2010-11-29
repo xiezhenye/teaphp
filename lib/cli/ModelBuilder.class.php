@@ -4,7 +4,7 @@ include CORE_LIB_PATH.'/model/mysql/MysqlResultSet.class.php';
 include CORE_LIB_PATH.'/util/StringUtil.class.php';
 
 /**
- *
+ * @package cli
  */
 class ModelBuilder {
 	

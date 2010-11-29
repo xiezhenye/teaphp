@@ -1,6 +1,6 @@
 <?php
 /**
- *
+ * @package cli
  */
 class ModuleBuilder {
 	function build($moduleName, $root) {
