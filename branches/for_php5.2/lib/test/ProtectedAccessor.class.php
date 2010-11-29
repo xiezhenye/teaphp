@@ -7,7 +7,7 @@
  * @copyright Copyright Zhenye Xie 2006. All rights reserved.
  * @author Zhenye Xie <xiezhenye@gmail.com>
  * @version 0.8
- * @package common
+ * @package test
  */
 class ProtectedAccessor {
     private static $classes=array();
