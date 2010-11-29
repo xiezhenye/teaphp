@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * http请求对象
+ * @package http
+ */
 class HTTPRequest {
     
     protected $params;
@@ -8,6 +11,27 @@ class HTTPRequest {
     
     protected $flash;
     
+    protected $data = array('get'=>array(), 'post'=>array(), 'cookie'=>array(), 'server'=>array());
+	
+    /**
+     *
+     * @param array $param 路由请求参数
+     */
+    function __construct($params = array()) {
+        $this->params = $params;
+		$this->data['get'] = $_GET;
+        $this->data['post'] = $_POST;
+        $this->data['cookie'] = $_COOKIE;
+		$this->data['server'] = $_SERVER;
+		if ($this->method() == 'PUT' && $this->contentMIME() == 'application/x-www-form-urlencoded') {
+			$input = file_get_contents('php://input');
+			parse_str($input, $this->data['put']);
+		}
+		if (get_magic_quotes_gpc()) {
+            $this->data = array_map(array(__CLASS__, '_stripslashes'), $this->data);
+		}
+    }
+	
     /**
      *
      * @return HTTPRequest
@@ -18,35 +42,43 @@ class HTTPRequest {
         }
         return self::$instance;
     }
-
-    /**
-     * 自动判断magic_quote设置，去掉添加的反斜杠
-     *
-     */
-    static function autoStripslashes() {
-        static $stripped = false;
-        if (!$stripped && get_magic_quotes_gpc()) {
-            $_GET = self::_stripslashes($_GET);
-            $_POST = self::_stripslashes($_POST);
-            $_COOKIE = self::_stripslashes($_COOKIE);
-            $_REQUEST = self::_stripslashes($_REQUEST);
-            $stripped = true;
+    
+    public function setVar($type) {
+        $args = func_get_args();
+        if (count($args) == 2 && is_array($args[1])) {
+            $this->data[strtolower($type)] = $args[1];
+			return;
         }
+        if (count($args) == 3) {
+            $key = $args[1];
+            $value = $args[2];
+            $this->data[strtolower($type)][$key] = $value;
+			return;
+        }
+		throw new Exception('bad argument');
     }
+	
+	public function contentMIME() {
+		$ct = $this->server('CONTENT_TYPE', '');
+		list($mime, ) = explode(';', $ct);
+		return trim($mime);
+	}
+	
+	public function contentCharset() {
+		$ct = $this->server('CONTENT_TYPE', '');
+		list($mime, $s) = explode(';', $ct);
+		list($name, $value) = explode('=', trim($s));
+		if ($name == 'charset') {
+			return $value;
+		}
+		return '';
+	}
     
     private static function _stripslashes($var) {
         if (is_array($var)) {
             return array_map(array(__CLASS__, '_stripslashes'), $var);
         }
         return stripcslashes($var);
-    }
-    
-    /**
-     *
-     * @param array $params 路由请求参数
-     */
-    function __construct($params = array()) {
-        $this->params = $params;
     }
     
     /**
@@ -66,6 +98,7 @@ class HTTPRequest {
         $this->params[$name] = $value;
     }
     
+	
     /**
      * 客户端IP地址
      *
@@ -73,12 +106,12 @@ class HTTPRequest {
      */
     function remoteIP($follow = false) {
         if (!$follow) {
-            return $_SERVER['REMOTE_ADDR'];
+            return $this->data['server']['REMOTE_ADDR'];
         }
-        if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ) {
-            $ips = explode (', ', $_SERVER['HTTP_X_FORWARDED_FOR']);
-            if (isset($_SERVER["HTTP_CLIENT_IP"])) {
-                array_unshift($ips, $_SERVER["HTTP_CLIENT_IP"]);
+        if (isset($this->data['server']['HTTP_X_FORWARDED_FOR']) ) {
+            $ips = explode (', ', $this->data['server']['HTTP_X_FORWARDED_FOR']);
+            if (isset($this->data['server']["HTTP_CLIENT_IP"])) {
+                array_unshift($ips, $this->data['server']["HTTP_CLIENT_IP"]);
             }
             foreach ($ips as $ip) {
                 $ipa = explode('.', $ip);
@@ -91,15 +124,15 @@ class HTTPRequest {
                 return $ip;
             }
         }
-        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        return isset($this->data['server']['REMOTE_ADDR']) ? $this->data['server']['REMOTE_ADDR'] : '';
     }
     
     /**
-     * 请求的路径
+     * 请求的uri
      * @return string
      */
-    function path() {
-        return isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    function uri() {
+        return isset($this->data['server']['REQUEST_URI']) ? $this->data['server']['REQUEST_URI'] : '';
     }
     
     /**
@@ -108,7 +141,7 @@ class HTTPRequest {
      * @return string
      */
     function userAgent() {
-        return $this->header('USER-AGENT');
+        return isset($this->data['server']['HTTP_USER_AGENT']) ? $this->data['server']['HTTP_USER_AGENT'] : '';
     }
     
     /**
@@ -116,24 +149,17 @@ class HTTPRequest {
      * 
      * @return string
      */
+
     function referer() {
-        return $this->header('referer');
-    }
-    
-    function host() {
-        return $this->header('host');
+        return isset($this->data['server']['HTTP_REFERER']) ? $this->data['server']['HTTP_REFERER'] : '';
     }
     
     /**
      * 请求的完整url
      */
     function url() {
-        $host = $this->host();
-        $ret = $this->path();
-        if ($host != '') {
-            $ret = 'http://'.$host . $ret;
-        }
-        return $ret;
+        $host = isset($this->data['server']['HTTP_HOST']) ? $this->data['server']['HTTP_HOST'] : '';
+        return 'http://'.$host . $this->uri();
     }
     
     /**
@@ -144,9 +170,9 @@ class HTTPRequest {
      */
     function get($name = null, $default = null) {
     	if ($name === null) {
-    		return $_GET;
+    		return $this->data['get'];
     	}
-        return isset($_GET[$name]) ? $_GET[$name] : $default;
+        return isset($this->data['get'][$name]) ? $this->data['get'][$name] : $default;
     }
     
     /**
@@ -155,11 +181,39 @@ class HTTPRequest {
      * @param string $default
      * @return mixed
      */    
-    function post($name = null , $default = null) {
+    function post($name = null, $default = null) {
         if ($name === null) {
-    		return $_POST;
+    		return $this->data['post'];
     	}    	
-        return isset($_POST[$name]) ? $_POST[$name] : $default;
+        return isset($this->data['post'][$name]) ? $this->data['post'][$name] : $default;
+    }
+	
+	
+	/**
+     * 环境变量以及请求信息
+     * 
+     * @param string $name
+     * @param string $default
+     * @return mixed
+     */    
+	function server($name = null, $default = null) {
+		if ($name === null) {
+    		return $this->data['server'];
+    	}    	
+        return isset($this->data['server'][$name]) ? $this->data['server'][$name] : $default;
+	}
+	
+	/**
+     * http put参数
+     * @param string $name
+     * @param string $default
+     * @return mixed
+     */    
+    function put($name = null , $default = null) {
+        if ($name === null) {
+    		return $this->data['put'];
+    	}    	
+        return isset($this->data['put'][$name]) ? $this->data['put'][$name] : $default;
     }
      
     /**
@@ -169,7 +223,10 @@ class HTTPRequest {
      * @return mixed
      */   
     function request($name, $default = null) {
-        return $this->cookie($name, $this->post($name, $this->get($name, $default)));
+        return $this->cookie($name,
+					$this->post($name,
+						$this->put($name, 
+							$this->get($name, $default))));
     }
     
     /**
@@ -179,7 +236,10 @@ class HTTPRequest {
      * @return mixed
      */    
     function cookie($name, $default = null) {
-        return isset($_COOKIE[$name]) ? $_COOKIE[$name] : $default;
+        if ($name === null) {
+    		return $this->data['cookie'];
+    	}
+        return isset($this->data['cookie'][$name]) ? $this->data['cookie'][$name] : $default;
     }
     
     /**
@@ -214,7 +274,7 @@ class HTTPRequest {
      * @return string
      */
     function method($restful = false) {
-        $ret =  strtoupper($_SERVER['REQUEST_METHOD']);
+        $ret =  strtoupper($this->data['server']['REQUEST_METHOD']);
         if ($restful && $ret == 'POST') {
 			$alias = array('DELETE', 'PUT', 'HEADER', 'GET');
 			if (in_array($this->post('REQUEST_METHOD'), $alias)) {
@@ -245,11 +305,21 @@ class HTTPRequest {
     }
     
     function queryString() {
-        return isset($_SERVER['QUERY_STRING']) ? $_SERVER['QUERY_STRING'] : '';
+        return isset($this->data['server']['QUERY_STRING']) ? $this->data['server']['QUERY_STRING'] : '';
     }
     
     function accept() {
-        return $this->header('accept');
+        return isset($this->data['server']['HTTP_ACCEPT']) ? $this->data['server']['HTTP_ACCEPT'] : '';
+    }
+    
+    /**
+     * http 请求头
+     *
+     * @deprecated
+     * @return array
+     */
+    function headers() {
+        return $this->allHeaders();
     }
     
     /**
@@ -259,7 +329,7 @@ class HTTPRequest {
      */
     function allHeaders() {
         $ret = array();
-        foreach ($_SERVER as $name => $value) {
+        foreach ($this->data['server'] as $name => $value) {
             if (StringUtil::beginWith($name, 'HTTP_')) {
                 $key = substr(str_replace('_', ' ', $name), 5);
                 $key = str_replace(' ', '-', ucwords(strtolower($key)));
@@ -271,20 +341,13 @@ class HTTPRequest {
     
     /**
      * http 请求头
-     * 
-     * @param string $name
-     * @param string $default
      * @return array
      */
-    function header($name, $default = null) {
+    function header($name) {
         $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
-        return isset($_SERVER[$key]) ? $_SERVER[$key] : $default;
+        return isset($this->data['server'][$key]) ? $this->data['server'][$key] : null;
     }
-    
-    function getSession() {
-        $sess = Session::getInstance();
-        return $sess;
-    }
+        
     /**
      * 转发 http 请求，会携带请求中的主要 header
      *
@@ -317,150 +380,68 @@ class HTTPRequest {
  * 
  */
 class UploadedFile {
-    private $file;
+	private $file;
     
     /**
      * 
      * @param array $fileArray
      */
-    function __construct($fileArray) {
-        $this->file = $fileArray;
-    }
+	function __construct($fileArray) {
+		$this->file = $fileArray;
+	}
     
     /**
      * 文件大小，单位：byte
      * 
      * @return int 
      */
-    function size() {
-        return $this->file['size'];
-    }
+	function size() {
+		return $this->file['size'];
+	}
     
     /**
      * 原始文件名
      *
      * @return string
      */
-    function name() {
-        return $this->file['name'];
-    }
-    
-    /**
-     * 原始文件的扩展名
-     *
-     * @return string
-     */
-    function extName() {
-        $ret = strtolower(substr(strrchr($this->name(), '.'), 1));
-        return $ret;
-    }
+	function name() {
+		return $this->file['name'];
+	}
     
     /**
      * 客户端提供的 MIME TYPE
      *
      * @return string
      */
-    function type() {
-        return $this->file['type'];
-    }
-    
+	function type() {
+		return $this->file['type'];
+	}
+	
     /**
      * 错误信息
      *
      * @return string
      */
-    function error() {
-        return $this->file['error'];
-    }
+	function error() {
+		return $this->file['error'];
+	}
     
     /**
      * 临时文件名
      *
      * @return string
      */
-    function tmpName() {
-        return $this->file['tmp_name'];
-    }
+	function tmpName() {
+		return $this->file['tmp_name'];
+	}
     
     /**
      * 将临时文件移动到目标路径
      *
      * @return bool
      */
-    function moveTo($path) {
-        return move_uploaded_file($this->tmpName(), $path);
-    }
-    
+	function moveTo($path) {
+		return move_uploaded_file($this->tmpName(), $path);
+	}
 }
 
-
-class Session implements ArrayAccess {
-    /**
-     * @param string $handler
-     * @param array $conf
-     * 
-     * @return Session
-     */
-    static function getInstance($handler = 'file', $conf = array()) {
-        static $ret = null;
-        if (is_null($ret)) {
-            $ret = new Session($handler, $conf);
-        }
-        return $ret;
-    }
-    
-    /**
-     *
-     * @param string $handler
-     * @param array $conf
-     */
-    private function __construct($handler, $conf) {
-        if (isset($conf['domain'])) {
-            ini_set('session.cookie_domain', $conf['domain']);
-        }
-        if ($handler == 'memcache') {
-            $this->initMemcacheHandler($conf);
-        }
-        session_start();
-    }
-    
-    private function initMemcacheHandler($conf) {
-        $host = $conf['host'];
-        ini_set('session.save_handler', 'memcache');
-        $url = "tcp://$host";
-        //$url.= "?persistent=0&weight=1&timeout=1&retry_interval=5";
-        ini_set('session.save_path', $url);
-    }
-    
-    function OffsetGet($offset) {
-        return $this->OffsetExists($offset) ? $_SESSION[$offset] : null;
-    }
-    
-    function OffsetExists($offset) {
-        return isset($_SESSION[$offset]);
-    }
-    
-    function OffsetUnset($offset) {
-        unset($_SESSION[$offset]);
-    }
-    
-    function OffsetSet($offset, $value) {
-        $_SESSION[$offset] = $value;
-    }
-    
-    function set($key, $value) {
-        return $this->OffsetSet($key, $value);
-    }
-    
-    function get($key) {
-        return $this->OffsetGet($key);
-    }
-    
-    function remove($key) {
-        return $this->OffsetUnset($key);
-    }
-    
-    function has($key) {
-        return $this->OffsetExists($key);
-    }
-}
