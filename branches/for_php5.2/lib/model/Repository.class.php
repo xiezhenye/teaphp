@@ -5,7 +5,6 @@
  */
 class Repository {
     protected static $isNew = array();
-    
     protected $className;
     protected $conf;
     /**
@@ -17,12 +16,6 @@ class Repository {
      * @var SqlBuilder
      */
     protected $sqlBuilder;
-    
-    protected $beforeAddCallbacks = array();
-    protected $beforeDeleteCallbacks = array();
-    protected $beforeUpdateCallbacks = array();
-    protected $beforeFindCallbacks = array();
-    protected $beforeSaveCallbacks = array();
     
     protected $callbacks = array(
                         'before_add'=>array(),
@@ -37,11 +30,7 @@ class Repository {
                         'after_find'=>array(),
                         'after_save'=>array(),
                     );
-    protected $afterAddCallbacks = array();
-    protected $afterDeleteCallbacks = array();
-    protected $afterUpdateCallbacks = array();
-    protected $afterFindCallbacks = array();
-    protected $afterSaveCallbacks = array();
+
     
     /**
      * 得到数据库对象
@@ -125,16 +114,21 @@ class Repository {
      * @param Query $query
      * @param array $params
      */
-    function findPage($page_no, $page_size, $query, $params = array()) {
+    function findPage($page_no, $page_size, $query, $params = array(), $return_total = true) {
         $q = $query->getArray();
         $cond = $q['condition'];
-        $count = $this->count($cond, $params);
-        if ($page_no < 1) {
-            $page_no = 1;
-        }
-        $page_count = ceil($count / $page_size);
-        if ($page_no > $page_count) {
-            $page_no = $page_count;
+        if ($return_total) {
+            $count = $this->count($cond, $params);
+            if ($page_no < 1) {
+                $page_no = 1;
+            }
+            $page_count = ceil($count / $page_size);
+            if ($page_no > $page_count) {
+                $page_no = $page_count;
+            }
+        } else {
+            $count = -1;
+            $page_count = -1;
         }
         $query->page($page_no, $page_size);
         $data = $this->findAll($query, $params);
@@ -211,29 +205,6 @@ class Repository {
         $row = $this->getDB($q)->query($sql)->fetch();
         return intval(current($row));
     }
-    
-    /**
-     * 创建一个新对象
-     *
-     * @return BaseModel
-     */
-    function createNew() {
-        $class = class_exists($this->className) ? $this->className : 'BaseModel';
-        $ret = new $class(array(), $this->conf['id'], true);
-        self::setNew($ret);
-        return $ret;
-	}
-    
-    /**
-     * 创建用于更新的数据对象
-     *
-     * @deprecated
-     * @return BaseModel
-     */
-    function createForUpdate() {
-        $class = class_exists($this->className) ? $this->className : 'BaseModel';
-		return new $class(array(), $this->conf['id'], false);
-	}
 
     /**
      * 找到符号条件的第一个对象
@@ -363,7 +334,7 @@ class Repository {
         $ret = $this->execQuery('insert', $query, $param);
         if ($ret) {
             $id = $this->getDB($query)->lastId();
-            if ($id > 0) {
+            if ($id > 0) { 
                 self::setNew($obj, false);
                 $obj->saved($id);
             }
@@ -447,7 +418,7 @@ class Repository {
     }
     
     function affected() {
-        $ret = $db->affected();
+        $ret = $this->db->affected();
         return $ret;
     }
 

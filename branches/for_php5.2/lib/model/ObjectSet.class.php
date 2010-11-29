@@ -1,9 +1,9 @@
 <?php
 /**
  * 对象集合
- *
+ * @package model
  */
-class ObjectSet implements Countable,Iterator {
+class ObjectSet implements  Countable,Iterator {
     
     protected $rs = array();
     protected $className;
@@ -142,6 +142,16 @@ class ObjectSet implements Countable,Iterator {
             foreach ($fks[$obj->getId()] as $i) {
                 $this->rs[$i]->attach($property, $obj);
             }
+        }
+    }
+    
+    /**
+     *
+     * @param string $property 属性
+     */
+    function tryGet($property) {
+        foreach ($this->rs as $obj) {
+            $obj->get($property);
         }
     }
     
