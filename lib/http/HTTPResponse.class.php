@@ -1,4 +1,8 @@
 <?php
+/**
+ * http响应对象
+ * @package http
+ */
 class HTTPResponse {
     private static $instance = null;
     /**

@@ -1,7 +1,7 @@
 <?php
 /**
  * 简单 HTTP 客户端
- *
+ * @package http
  */
 class SimpleHTTPClient {
     protected $response_headers = array();
@@ -19,7 +19,8 @@ class SimpleHTTPClient {
      * @param bool $return 为 true 时直接输出结果，为 false 时将结果返回
      */
     function doRequest($method, $url, $headers = array(), $body = '', $return = true) {
-        if (!isset($headers['Content-Type'])) {
+        $method = strtoupper($method);
+        if (in_array($method, array('POST', 'PUT')) && !isset($headers['Content-Type'])) {
             $headers['Content-Type'] = 'application/x-www-form-urlencoded';
         }
         $opts = $this->buildHTTPContextArray($method, $headers);
@@ -79,7 +80,7 @@ class SimpleHTTPClient {
      * @param bool $return 为 true 时直接输出结果，为 false 时将结果返回
      */
     function post($url, $postData, $headers = array(), $return = true) {
-        $rawStr = $this->buildRawData($postData);
+        $rawStr = http_build_query($postData);
         return $this->doRequest('POST', $url, $headers, $rawStr, $return);
     }
     
@@ -92,7 +93,7 @@ class SimpleHTTPClient {
      * @param bool $return 为 true 时直接输出结果，为 false 时将结果返回
      */
     function put($url, $postData, $headers = array(), $return = true) {
-        $rawStr = $this->buildRawData($postData);
+        $rawStr = http_build_query($postData);
         return $this->doRequest('PUT', $url, $headers, $rawStr, $return);
     }
     
@@ -107,14 +108,6 @@ class SimpleHTTPClient {
         return $this->doRequest('DELETE', $url, $headers, '', $return);
     }
     
-    function buildRawData($data) {
-        $rawData  = array();
-        foreach ($postData as $k=>$v) {
-            $rawData[] = rawurlencode($k).'='.rawurlencode($v);
-        }
-        $rawStr = implode('&', $rawData);
-        return $rawStr;
-    }
     
     
 }
