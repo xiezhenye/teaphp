@@ -12,6 +12,8 @@ class App {
     private $dispatcher = null;
     private $repositories = array();
     
+    private static $conf = array();
+    
     /**
      * 初始化
      *
@@ -32,6 +34,7 @@ class App {
         static $db = array();
         if (!isset($db[$name])) {
             $dbConf = $this->conf('resource', 'database');
+        
             if (!isset($dbConf[$name]['host']) || !isset($dbConf[$name]['name'])) {
                 return null;
             }
@@ -80,6 +83,7 @@ class App {
             } else {
                 $ret = new Repository();
             }
+            
             $ret->setClass($class);
             $ret->setConfig($conf);
             $dbName = isset($conf['db']) ? $conf['db'] : 'default';
@@ -93,6 +97,7 @@ class App {
      * 根据配置得到分派器实例
      *
      * @return Dispatcher
+     * @deprecated
      */
     function getDispatcher() {
         if (is_null($this->dispatcher)) {
