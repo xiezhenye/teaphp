@@ -12,7 +12,6 @@ class App {
     private $dispatcher = null;
     private $repositories = array();
     
-    private static $conf = array();
     
     /**
      * 初始化

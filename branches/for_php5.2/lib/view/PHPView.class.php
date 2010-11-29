@@ -19,7 +19,7 @@ class PHPView extends BaseView{
     public $_curTplName;
     public $_curTplData = '';
     public $_layoutName = BaseView::LAYOUT;
-    
+    private $_module;
     /**
      *
      * @var HTTPRequest
