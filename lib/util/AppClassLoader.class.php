@@ -1,5 +1,8 @@
 <?php
-
+/**
+ *
+ * @package util
+ */
 class AppClassLoader {
     private $classMap = array();
     private $appDir;
