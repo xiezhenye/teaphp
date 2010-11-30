@@ -42,12 +42,10 @@ class Dispatcher {
         $viewName = $params['_view'];
         $conf = $this->app->conf('app', "actions/$type/view/$viewName", array());
         $response = HTTPResponse::getInstance();
-    /** @var BaseView */
+        /** @var BaseView */
         $view = new $viewName($conf);
         $view->setDispatcher($this);
         $view->setAppPath($this->app->path());
-    
-    
         if (method_exists($view, 'setRequest')) {
             $view->setRequest($request);
         }

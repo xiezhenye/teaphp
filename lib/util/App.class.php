@@ -117,7 +117,11 @@ class App {
         $key = "$module/$conf_name";
         if (!isset($this->conf[$key])) {
             $conf_file = $this->path.'/modules/'.$module.'/conf/'.$conf_name.'.conf.php';
-            $this->conf[$key] = include $conf_file;
+            try {
+                $this->conf[$key] = include $conf_file;
+            } catch (Exception $e) {
+                return null;
+            }
         }
         $ret = $this->conf[$key];
         return $this->arrayPath($ret, $path, $default);

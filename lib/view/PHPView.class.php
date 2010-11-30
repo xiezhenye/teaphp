@@ -200,7 +200,7 @@ class PHPView extends BaseView{
      * @param string $method 方法名
      * @param array $params request参数
      */
-    function useBlock($action, $method, $params = array()) {
+    function useBlock($action, $method, $params = array(), $return = false) {
         $params['_action'] = $action;
         $params['_method'] = $method;
         $params['_type'] = 'block';
@@ -209,12 +209,23 @@ class PHPView extends BaseView{
         $old = $_SERVER['REQUEST_METHOD'];
         $_SERVER['REQUEST_METHOD'] = 'GET';
         //$this->_controller->call($module, $type, 'get', $method, $request, HTTPResponse::getInstance());
+        $ret = '';
         try {
-            $this->_dispatcher->doDispatch($params, $request);
+            if ($return) {
+                ob_start();
+                $this->_dispatcher->doDispatch($params, $request);
+                $ret = ob_get_clean();
+            } else {
+                $this->_dispatcher->doDispatch($params, $request);
+            }
         } catch (Exception $e) {
+            if ($return) {
+                ob_end_clean();
+            }
             // ignore error
         }
         $_SERVER['REQUEST_METHOD'] = $old;
+        return $ret;
     }
 }
 
