@@ -30,7 +30,8 @@ class Repository {
                         'after_find'=>array(),
                         'after_save'=>array(),
                     );
-
+    
+    protected $defaultData = null;
     
     /**
      * 得到数据库对象
@@ -106,6 +107,7 @@ class Repository {
         }
         array_push($this->$event_prop, $callback);
     }
+    
     
     /**
      *
@@ -205,8 +207,33 @@ class Repository {
         $row = $this->getDB($q)->query($sql)->fetch();
         return intval(current($row));
     }
-
+    
+    protected function getDefaultData() {
+        if (!is_null($this->default_data)) {
+            return $this->defaultData;
+        }
+        $this->defaultData = array();
+        foreach ($this->conf['properties'] as $name=>$conf) {
+            if (isset($conf['default'])) {
+                $this->defaultData[$name] = $conf['default'];
+            }
+        }
+        return $this->defaultData;
+    }
+    
     /**
+     * 创建一个新对象
+     *
+     * @return BaseModel
+     */
+    function createNew() {
+        $class = class_exists($this->className) ? $this->className : 'BaseModel';
+        $ret = new $class(array(), $this->conf['id']);
+        self::setNew($ret);
+        return $ret;
+	}
+    
+    /*
      * 找到符号条件的第一个对象
      * 
      * @param Query $query 查询对象
@@ -336,7 +363,6 @@ class Repository {
             $id = $this->getDB($query)->lastId();
             if ($id > 0) { 
                 self::setNew($obj, false);
-                $obj->saved($id);
             }
         }
         foreach ($this->callbacks['after_add'] as $callback) {
