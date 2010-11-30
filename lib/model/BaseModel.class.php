@@ -5,14 +5,12 @@
  */
 class BaseModel {
     protected $row;
-    protected $isNew;
     protected $id;
     protected $attaches = array();
     
-    function __construct($row, $id, $isNew = false) {
+    function __construct($row, $id) {
         $this->row = $row;
         $this->id = (array) $id;
-        $this->isNew = $isNew;
     }
     
 	/**
@@ -32,18 +30,6 @@ class BaseModel {
 	
 	function idProperty() {
 		return count($this->id) > 1 ? $this->id : current($this->id);
-	}
-    
-	function saved($id = null) {
-        $this->isNew = false;
-        if (is_null($id)) {
-            return;
-        }
-        $arr = array_combine($this->id, (array) $id);
-        foreach ($arr as $k => $v) {
-            $this->set($k, $v);
-        }
-		
 	}
     
     function set($name, $value) {
