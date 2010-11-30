@@ -151,7 +151,11 @@ class HTTPRequest {
      */
 
     function referer() {
-        return isset($this->data['server']['HTTP_REFERER']) ? $this->data['server']['HTTP_REFERER'] : '';
+        return $this->httpHeader('referer');
+    }
+    
+    function host() {
+        return $this->httpHeader('host');
     }
     
     /**
@@ -280,8 +284,8 @@ class HTTPRequest {
 			if (in_array($this->post('REQUEST_METHOD'), $alias)) {
 				$ret = $this->post('REQUEST_METHOD');
 			} else {
-				if (in_array($this->header('Request-Method'), $alias)) {
-					$ret = $this->header('Request-Method');
+				if (in_array($this->httpHeader('Request-Method'), $alias)) {
+					$ret = $this->httpHeader('Request-Method');
 				}
 			}
         }
@@ -315,16 +319,6 @@ class HTTPRequest {
     /**
      * http 请求头
      *
-     * @deprecated
-     * @return array
-     */
-    function headers() {
-        return $this->allHeaders();
-    }
-    
-    /**
-     * http 请求头
-     *
      * @return array
      */
     function allHeaders() {
@@ -343,11 +337,15 @@ class HTTPRequest {
      * http 请求头
      * @return array
      */
-    function header($name) {
+    function httpHeader($name) {   
         $key = 'HTTP_' . strtoupper(str_replace('-', '_', $name));
         return isset($this->data['server'][$key]) ? $this->data['server'][$key] : null;
     }
-        
+    
+    function getSession() {
+        $sess = Session::getInstance();
+        return $sess;
+    }
     /**
      * 转发 http 请求，会携带请求中的主要 header
      *
@@ -357,7 +355,7 @@ class HTTPRequest {
     function forword($url, $return = false) {
         $client = new SimpleHTTPClient();
         
-        $headers = $this->headers();
+        $headers = $this->allHeaders();
         $forwordHeads = array('User-Agent', 'Accept', 'Accept-Language', 
                               'Accept-Charset', 'Cookie');
         
@@ -409,6 +407,16 @@ class UploadedFile {
 	}
     
     /**
+     * 原始文件的扩展名
+     *
+     * @return string
+     */
+    function extName() {
+        $ret = strtolower(substr(strrchr($this->name(), '.'), 1));
+        return $ret;
+    }
+    
+    /**
      * 客户端提供的 MIME TYPE
      *
      * @return string
@@ -443,5 +451,77 @@ class UploadedFile {
 	function moveTo($path) {
 		return move_uploaded_file($this->tmpName(), $path);
 	}
+    
 }
 
+
+class Session implements ArrayAccess {
+    /**
+     * @param string $handler
+     * @param array $conf
+     * 
+     * @return Session
+     */
+    static function getInstance($handler = 'file', $conf = array()) {
+        static $ret = null;
+        if (is_null($ret)) {
+            $ret = new Session($handler, $conf);
+        }
+        return $ret;
+    }
+    
+    /**
+     *
+     * @param string $handler
+     * @param array $conf
+     */
+    private function __construct($handler, $conf) {
+        if (isset($conf['domain'])) {
+            ini_set('session.cookie_domain', $conf['domain']);
+        }
+        if ($handler == 'memcache') {
+            $this->initMemcacheHandler($conf);
+        }
+        session_start();
+    }
+    
+    private function initMemcacheHandler($conf) {
+        $host = $conf['host'];
+        ini_set('session.save_handler', 'memcache');
+        $url = "tcp://$host";
+        //$url.= "?persistent=0&weight=1&timeout=1&retry_interval=5";
+        ini_set('session.save_path', $url);
+    }
+    
+    function OffsetGet($offset) {
+        return $this->OffsetExists($offset) ? $_SESSION[$offset] : null;
+    }
+    
+    function OffsetExists($offset) {
+        return isset($_SESSION[$offset]);
+    }
+    
+    function OffsetUnset($offset) {
+        unset($_SESSION[$offset]);
+    }
+    
+    function OffsetSet($offset, $value) {
+        $_SESSION[$offset] = $value;
+    }
+    
+    function set($key, $value) {
+        return $this->OffsetSet($key, $value);
+    }
+    
+    function get($key) {
+        return $this->OffsetGet($key);
+    }
+    
+    function remove($key) {
+        return $this->OffsetUnset($key);
+    }
+    
+    function has($key) {
+        return $this->OffsetExists($key);
+    }
+}
