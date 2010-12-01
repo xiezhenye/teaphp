@@ -30,6 +30,14 @@ class FrontController {
         $this->view = $view;
     }
     
+    static function getActionClass($type, $action_name) {
+        return StringUtil::camelize($action_name) . ucfirst($type);
+    }
+    
+    static function getMethodName($http_method, $method) {
+        return strtolower($http_method).StringUtil::camelize($method);
+    }
+    
     /**
      * 调用控制器
      *
@@ -41,8 +49,8 @@ class FrontController {
      * @param HTTPResponse $response
      */
     function call($action_name, $type, $http_method, $method, $request, $response) {
-        $class_name = StringUtil::camelize($action_name) . ucfirst($type);
-        $method_name = strtolower($http_method).StringUtil::camelize($method);
+        $class_name = self::getActionClass($type, $action_name);
+        $method_name = self::getMethodName($http_method, $method);
         if (!class_exists($class_name)) {
             $response->sendStatusHeader(404);
             echo "no action $class_name\n";
