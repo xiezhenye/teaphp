@@ -107,7 +107,12 @@ class App {
     
     function conf($confName, $path = '', $default = null) {
         if (!isset($this->conf[$confName])) {
-            $this->conf[$confName] = include $this->confPath.'/'.$confName.'.conf.php';
+            $file = $this->confPath.'/'.$confName.'.conf.php';
+            try {
+                $this->conf[$confName] = include $file;
+            } catch (Exception $e) {
+                return null;
+            }
         }
         $ret = $this->conf[$confName];
         return $this->arrayPath($ret, $path, $default);
