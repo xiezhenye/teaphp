@@ -228,7 +228,7 @@ class Repository {
      */
     function createNew() {
         $class = class_exists($this->className) ? $this->className : 'BaseModel';
-        $ret = new $class(array(), $this->conf['id']);
+        $ret = new $class($this->getDefaultData(), $this->conf['id']);
         self::setNew($ret);
         return $ret;
 	}
