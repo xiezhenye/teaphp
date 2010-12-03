@@ -61,7 +61,8 @@ class FrontController {
             echo "no $class_name $method_name\n";
             return;
         }
-        
+        $module_name = app()->getClassModule($class_name);
+        $request->setParam('_module', $module_name);
         $ret = null;
         try {
             /** @var BaseAction */
