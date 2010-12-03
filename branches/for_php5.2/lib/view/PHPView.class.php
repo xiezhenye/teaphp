@@ -72,7 +72,7 @@ class PHPView extends BaseView{
      */
     function render($_data, $_tplName) {
         $this->init();
-        v::pushTemplate($this);
+        v::pushView($this);
         
         $this->_data = $_data;
         if (isset($this->_conf['data'])) {
@@ -81,7 +81,7 @@ class PHPView extends BaseView{
         $_path = $this->tplPath($this->_tplDir['module'], $_tplName);
         if (!is_file($_path)) {
             $this->renderDefaultView($_data, $_tplName);
-            v::popTemplate();
+            v::popView();
             return;
         }
         
@@ -106,7 +106,7 @@ class PHPView extends BaseView{
             echo $this->_curTplData;
             
         }
-        v::popTemplate();
+        v::popView();
     }
     
     protected function tplPath($dir, $name) {
@@ -176,7 +176,7 @@ class PHPView extends BaseView{
             extract((array)$this->_conf['data']);
         }
 
-        v::pushTemplate($this);
+        v::pushView($this);
         $path = $this->_tplDir['status'].'/error.tpl.php';
         if (is_file($path)) {
             include $path;
@@ -190,7 +190,7 @@ class PHPView extends BaseView{
             echo '</p>';
             //echo '</body></html>';
         }
-        v::popTemplate();
+        v::popView();
     }
     
     /**
@@ -266,11 +266,11 @@ class v {
      * 
      * @param PHPView $tpl
      */    
-    static function pushTemplate($tpl) {
+    static function pushView($tpl) {
         array_push(self::$tpl, $tpl);
     }
 
-    static function popTemplate() {
+    static function popView() {
         array_pop(self::$tpl);
     }
     
@@ -278,7 +278,7 @@ class v {
      * 返回模板实例
      * 
      */    
-    static function getTemplate() {
+    static function getView() {
         return end(self::$tpl);
     }
     
@@ -630,5 +630,8 @@ class v {
         }
     }
     
+    static function getRequest() {
+        return v::getView()->getRequest();
+    }
 }
 
