@@ -209,7 +209,7 @@ class Repository {
     }
     
     protected function getDefaultData() {
-        if (!is_null($this->default_data)) {
+        if (!is_null($this->defaultData)) {
             return $this->defaultData;
         }
         $this->defaultData = array();
