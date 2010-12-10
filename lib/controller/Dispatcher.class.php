@@ -34,11 +34,11 @@ class Dispatcher {
      */
     function dispatch($url, $request) {
         $params = $this->parse($url, $request, $this->routeConfig());
-        $request->setVar('get', $params['_query']);
         if (empty($params)) {
             HTTPResponse::getInstance()->sendStatusHeader(404);
             return;
         }
+        $request->setVar('get', $params['_query']);
         $this->doDispatch($params, $request);
     }
    
@@ -181,6 +181,9 @@ class Dispatcher {
             $ret['_query'] = array();
             if (isset($parsed['query'])) {
                 parse_str($parsed['query'], $ret['_query']);
+            }
+            if (is_null($ret['_query'])) {
+                $ret['_query'] = array();
             }
             //$_GET = $ret['_query'];
             //HTTPRequest::autoStripslashes();
