@@ -466,6 +466,7 @@ class v {
      * @param string $default
      */
     static function map($map, $key, $default = '') {
+        $key = strval($key);
         echo isset($map[$key]) ? $map[$key] : $default;
     }
     

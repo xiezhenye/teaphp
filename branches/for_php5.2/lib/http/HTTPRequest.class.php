@@ -251,7 +251,23 @@ class HTTPRequest {
      * @return UploadedFile
      */    
     function files($name) {
-        return empty($_FILES[$name]['name']) ? null : new UploadedFile($_FILES[$name]);
+		if (empty($_FILES[$name])) {
+			return null;
+		}
+		
+		if (is_array($_FILES[$name])) {
+			$ret = array();
+			$len = count($_FILES[$name]['tmp_name']);
+			for ($i = 0; $i < $len; $i++) {
+				$arr = array();
+				foreach ($_FILES[$name] as $k=>$v) {
+					$arr[$k] = $v[$i];
+				}
+				$ret[]= new UploadedFile($arr);
+			}
+			return $ret;
+		}
+        return new UploadedFile($_FILES[$name]);
     }
      
     /**
