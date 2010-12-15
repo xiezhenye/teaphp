@@ -12,26 +12,26 @@ class HTTPRequest {
     protected $flash;
     
     protected $data = array('get'=>array(), 'post'=>array(), 'cookie'=>array(), 'server'=>array());
-	
+    
     /**
      *
      * @param array $param 路由请求参数
      */
     function __construct($params = array()) {
         $this->params = $params;
-		$this->data['get'] = $_GET;
+        $this->data['get'] = $_GET;
         $this->data['post'] = $_POST;
         $this->data['cookie'] = $_COOKIE;
-		$this->data['server'] = $_SERVER;
-		if ($this->method() == 'PUT' && $this->contentMIME() == 'application/x-www-form-urlencoded') {
-			$input = file_get_contents('php://input');
-			parse_str($input, $this->data['put']);
-		}
-		if (get_magic_quotes_gpc()) {
+        $this->data['server'] = $_SERVER;
+        if ($this->method() == 'PUT' && $this->contentMIME() == 'application/x-www-form-urlencoded') {
+            $input = file_get_contents('php://input');
+            parse_str($input, $this->data['put']);
+        }
+        if (get_magic_quotes_gpc()) {
             $this->data = array_map(array(__CLASS__, '_stripslashes'), $this->data);
-		}
+        }
     }
-	
+    
     /**
      *
      * @return HTTPRequest
@@ -47,32 +47,32 @@ class HTTPRequest {
         $args = func_get_args();
         if (count($args) == 2 && is_array($args[1])) {
             $this->data[strtolower($type)] = $args[1];
-			return;
+            return;
         }
         if (count($args) == 3) {
             $key = $args[1];
             $value = $args[2];
             $this->data[strtolower($type)][$key] = $value;
-			return;
+            return;
         }
-		throw new Exception('bad argument');
+        throw new Exception('bad argument');
     }
-	
-	public function contentMIME() {
-		$ct = $this->server('CONTENT_TYPE', '');
-		list($mime, ) = explode(';', $ct);
-		return trim($mime);
-	}
-	
-	public function contentCharset() {
-		$ct = $this->server('CONTENT_TYPE', '');
-		list($mime, $s) = explode(';', $ct);
-		list($name, $value) = explode('=', trim($s));
-		if ($name == 'charset') {
-			return $value;
-		}
-		return '';
-	}
+    
+    public function contentMIME() {
+        $ct = $this->server('CONTENT_TYPE', '');
+        list($mime, ) = explode(';', $ct);
+        return trim($mime);
+    }
+    
+    public function contentCharset() {
+        $ct = $this->server('CONTENT_TYPE', '');
+        list($mime, $s) = explode(';', $ct);
+        list($name, $value) = explode('=', trim($s));
+        if ($name == 'charset') {
+            return $value;
+        }
+        return '';
+    }
     
     private static function _stripslashes($var) {
         if (is_array($var)) {
@@ -98,7 +98,7 @@ class HTTPRequest {
         $this->params[$name] = $value;
     }
     
-	
+    
     /**
      * 客户端IP地址
      *
@@ -173,9 +173,9 @@ class HTTPRequest {
      * @return mixed
      */
     function get($name = null, $default = null) {
-    	if ($name === null) {
-    		return $this->data['get'];
-    	}
+        if ($name === null) {
+            return $this->data['get'];
+        }
         return isset($this->data['get'][$name]) ? $this->data['get'][$name] : $default;
     }
     
@@ -187,27 +187,27 @@ class HTTPRequest {
      */    
     function post($name = null, $default = null) {
         if ($name === null) {
-    		return $this->data['post'];
-    	}    	
+            return $this->data['post'];
+        }        
         return isset($this->data['post'][$name]) ? $this->data['post'][$name] : $default;
     }
-	
-	
-	/**
+    
+    
+    /**
      * 环境变量以及请求信息
      * 
      * @param string $name
      * @param string $default
      * @return mixed
      */    
-	function server($name = null, $default = null) {
-		if ($name === null) {
-    		return $this->data['server'];
-    	}    	
+    function server($name = null, $default = null) {
+        if ($name === null) {
+            return $this->data['server'];
+        }        
         return isset($this->data['server'][$name]) ? $this->data['server'][$name] : $default;
-	}
-	
-	/**
+    }
+    
+    /**
      * http put参数
      * @param string $name
      * @param string $default
@@ -215,8 +215,8 @@ class HTTPRequest {
      */    
     function put($name = null , $default = null) {
         if ($name === null) {
-    		return $this->data['put'];
-    	}    	
+            return $this->data['put'];
+        }        
         return isset($this->data['put'][$name]) ? $this->data['put'][$name] : $default;
     }
      
@@ -228,9 +228,9 @@ class HTTPRequest {
      */   
     function request($name, $default = null) {
         return $this->cookie($name,
-					$this->post($name,
-						$this->put($name, 
-							$this->get($name, $default))));
+                    $this->post($name,
+                        $this->put($name, 
+                            $this->get($name, $default))));
     }
     
     /**
@@ -241,8 +241,8 @@ class HTTPRequest {
      */    
     function cookie($name, $default = null) {
         if ($name === null) {
-    		return $this->data['cookie'];
-    	}
+            return $this->data['cookie'];
+        }
         return isset($this->data['cookie'][$name]) ? $this->data['cookie'][$name] : $default;
     }
     
@@ -251,23 +251,25 @@ class HTTPRequest {
      * @return UploadedFile
      */    
     function files($name) {
-		if (empty($_FILES[$name])) {
-			return null;
-		}
-		
-		if (is_array($_FILES[$name])) {
-			$ret = array();
-			$len = count($_FILES[$name]['tmp_name']);
-			for ($i = 0; $i < $len; $i++) {
-				$arr = array();
-				foreach ($_FILES[$name] as $k=>$v) {
-					$arr[$k] = $v[$i];
-				}
-				$ret[]= new UploadedFile($arr);
-			}
-			return $ret;
-		}
-        return new UploadedFile($_FILES[$name]);
+        if (empty($_FILES[$name]) || empty($_FILES[$name]['tmp_name'])) {
+            return null;
+        }
+        if (!is_array($_FILES[$name]['tmp_name'])) {
+            return new UploadedFile($_FILES[$name]);
+        }
+        $ret = array();
+        $len = count($_FILES[$name]['tmp_name']);
+        for ($i = 0; $i < $len; $i++) {
+            if (empty($_FILES[$name]['tmp_name'][$i])) {
+                continue;
+            }
+            $arr = array();
+            foreach ($_FILES[$name] as $k=>$v) {
+                $arr[$k] = $v[$i];
+            }
+            $ret[]= new UploadedFile($arr);
+        }
+        return $ret;
     }
      
     /**
@@ -296,14 +298,14 @@ class HTTPRequest {
     function method($restful = false) {
         $ret =  strtoupper($this->data['server']['REQUEST_METHOD']);
         if ($restful && $ret == 'POST') {
-			$alias = array('DELETE', 'PUT', 'HEADER', 'GET');
-			if (in_array($this->post('REQUEST_METHOD'), $alias)) {
-				$ret = $this->post('REQUEST_METHOD');
-			} else {
-				if (in_array($this->httpHeader('Request-Method'), $alias)) {
-					$ret = $this->httpHeader('Request-Method');
-				}
-			}
+            $alias = array('DELETE', 'PUT', 'HEADER', 'GET');
+            if (in_array($this->post('REQUEST_METHOD'), $alias)) {
+                $ret = $this->post('REQUEST_METHOD');
+            } else {
+                if (in_array($this->httpHeader('Request-Method'), $alias)) {
+                    $ret = $this->httpHeader('Request-Method');
+                }
+            }
         }
         return $ret;
     }
@@ -315,7 +317,7 @@ class HTTPRequest {
         $ret = json_decode($ret, true);
         return $ret;
     }
-	
+    
     /**
      * post 请求的请求体
      * @return string
@@ -394,33 +396,33 @@ class HTTPRequest {
  * 
  */
 class UploadedFile {
-	private $file;
+    private $file;
     
     /**
      * 
      * @param array $fileArray
      */
-	function __construct($fileArray) {
-		$this->file = $fileArray;
-	}
+    function __construct($fileArray) {
+        $this->file = $fileArray;
+    }
     
     /**
      * 文件大小，单位：byte
      * 
      * @return int 
      */
-	function size() {
-		return $this->file['size'];
-	}
+    function size() {
+        return $this->file['size'];
+    }
     
     /**
      * 原始文件名
      *
      * @return string
      */
-	function name() {
-		return $this->file['name'];
-	}
+    function name() {
+        return $this->file['name'];
+    }
     
     /**
      * 原始文件的扩展名
@@ -437,36 +439,36 @@ class UploadedFile {
      *
      * @return string
      */
-	function type() {
-		return $this->file['type'];
-	}
-	
+    function type() {
+        return $this->file['type'];
+    }
+    
     /**
      * 错误信息
      *
      * @return string
      */
-	function error() {
-		return $this->file['error'];
-	}
+    function error() {
+        return $this->file['error'];
+    }
     
     /**
      * 临时文件名
      *
      * @return string
      */
-	function tmpName() {
-		return $this->file['tmp_name'];
-	}
+    function tmpName() {
+        return $this->file['tmp_name'];
+    }
     
     /**
      * 将临时文件移动到目标路径
      *
      * @return bool
      */
-	function moveTo($path) {
-		return move_uploaded_file($this->tmpName(), $path);
-	}
+    function moveTo($path) {
+        return move_uploaded_file($this->tmpName(), $path);
+    }
     
 }
 
