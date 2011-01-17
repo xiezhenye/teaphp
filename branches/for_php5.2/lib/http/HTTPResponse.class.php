@@ -23,7 +23,7 @@ class HTTPResponse {
         $cookieParam = array(
             'expires' => 0,
             'domain' => '',
-            'path' => ''
+            'path' => '/'
         );
         $cookieParam = array_merge($cookieParam, $param);
         setcookie($name, $value, $cookieParam['expires'], $cookieParam['path'], $cookieParam['domain']);
