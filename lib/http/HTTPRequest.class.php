@@ -542,4 +542,8 @@ class Session implements ArrayAccess {
     function has($key) {
         return $this->OffsetExists($key);
     }
+	
+	function destroy() {
+		session_destroy();
+	}
 }

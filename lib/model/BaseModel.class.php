@@ -82,9 +82,10 @@ class BaseModel {
      * @param string $property
      * @param mixed $obj
      */
-    function attach($property, $obj) {
+    function attach($property, $obj = null) {
         $this->attaches[$property] = $obj;
     }
+	
     function allAttaches() {
         return $this->attaches;
     } 
