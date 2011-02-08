@@ -91,9 +91,9 @@ class JSONView extends BaseView {
         }
         $ret['jsonp_callback'] = $callback;
         if (isset($ret[0]) && isset($ret[1])) { // 已返回视图
-            $ret[1] = self::JSONP;
+            $ret[1] = PHPView::JSON;
         } else {
-            $ret = array($ret, self::JSONP);
+            $ret = array($ret, PHPView::JSON);
         }
         return $ret;
     }

@@ -114,7 +114,6 @@ class PHPView extends BaseView{
     }
     
     function renderDefaultView($_data, $_tplName) {
-    	
     	if ($_tplName == BaseView::NOTFOUND) {
     		HTTPResponse::getInstance()->sendStatusHeader(404);
     	}
@@ -154,7 +153,7 @@ class PHPView extends BaseView{
             break;
         case PHPView::JSON:
             $json_view = new JSONView();
-            $json_view->render($_data, null);
+            $json_view->render($_data, $_tplName);
             break;
         case BaseView::NULL:
             // BaseView::NULL 视图默认行为，直接退出
@@ -206,9 +205,7 @@ class PHPView extends BaseView{
         $params['_type'] = 'block';
         $params['_view'] = 'PHPView';
         $request = new HTTPRequest($params);
-        $old = $_SERVER['REQUEST_METHOD'];
-        $_SERVER['REQUEST_METHOD'] = 'GET';
-        //$this->_controller->call($module, $type, 'get', $method, $request, HTTPResponse::getInstance());
+        $request->setVar('server', 'REQUEST_METHOD', 'GET');
         $ret = '';
         try {
             if ($return) {
@@ -224,7 +221,6 @@ class PHPView extends BaseView{
             }
             // ignore error
         }
-        $_SERVER['REQUEST_METHOD'] = $old;
         return $ret;
     }
 }
