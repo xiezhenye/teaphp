@@ -37,7 +37,8 @@ class Mysql {
         $this->name = $name;
         $this->charset = $charset;
         $this->selectDB($name);
-        mysql_query("set names '$charset'", $this->db);
+        mysql_set_charset($charset, $this->db);
+        //mysql_query("set names '$charset'", $this->db);
     }
     
     public function selectDB($name) {
@@ -127,5 +128,17 @@ class Mysql {
     
     function getResource() {
         return $this->db;
+    }
+    
+    function startTransaction() {
+        $this->execute('start transaction');
+    }
+    
+    function commit() {
+        $this->execute('commit');
+    }
+    
+    function rollback() {
+        $this->execute('rollback');
     }
 }

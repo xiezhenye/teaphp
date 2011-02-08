@@ -361,8 +361,9 @@ class Repository {
         $ret = $this->execQuery('insert', $query, $param);
         if ($ret) {
             $id = $this->getDB($query)->lastId();
+            self::setNew($obj, false);
             if ($id > 0) { 
-                self::setNew($obj, false);
+                $obj->set($this->conf['id'], $id);
             }
         }
         foreach ($this->callbacks['after_add'] as $callback) {
