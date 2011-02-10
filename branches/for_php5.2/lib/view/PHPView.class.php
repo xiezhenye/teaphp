@@ -117,7 +117,8 @@ class PHPView extends BaseView{
     	if ($_tplName == BaseView::NOTFOUND) {
     		HTTPResponse::getInstance()->sendStatusHeader(404);
     	}
-        $path = $this->tplPath($this->_tplDir['extern'], $_tplName);
+        $dir = 
+        $path = $this->tplPath($this->_tplDir['status'], $_tplName);
         if (is_file($path)) {
             if (isset($this->_conf['data'])) {
                 $_data = array_merge($_data, (array)$this->_conf['data']);
