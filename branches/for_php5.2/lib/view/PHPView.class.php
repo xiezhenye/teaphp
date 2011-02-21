@@ -494,21 +494,24 @@ class v {
      * 输出一个动作表单
      *
      * @param string $method http请求方法
-     * @param string $url 请求url，当为数组时，下标0为url模式，其他为值
+     * @param string $target 请求目标，为字符串时为url，当为数组时，下标0为url模式，其他为值
      * @see v::urlFor
      * 
      * @param string $name 表单的name
-     * @param array $params 表单域1
+     * @param array $params 表单域
      */
-    static function actionForm($method, $url, $name, $params = array()) {
+    static function actionForm($method, $target, $name, $params = array()) {
         echo '<form method="post" action="';
-        if (is_array($url)) {
-            call_user_func_array(array('v', 'urlFor'), $url);
+        if (is_array($target)) {
+            call_user_func_array(array('self', 'urlFor'), $target);
         } else {
-            v::urlFor($url);
+            echo $target;
         }
         echo '" name="' . $name . '" style="display:none;">';
-        echo '<input name="REQUEST_METHOD" value="'.strtoupper($method).'" type="hidden" />';
+        $method = strtoupper($method);
+        if ($method != 'POST') {
+            echo '<input name="REQUEST_METHOD" value="'.strtoupper($method).'" type="hidden" />';
+        }
         foreach ($params as $k => $v) {
             if (is_int($k)) {
                 echo '<input type="hidden" name="'.$v.'"/>';
@@ -576,12 +579,12 @@ class v {
             }
             $option .= "<option value=\"$key\"$selected>$val</option>\n";
         }
-        return $option;
+        echo $option;
     }
     
     static function select($name, $data, $default = null) {
         echo '<select name="'.htmlspecialchars($name).'">';
-        echo self::selectOptions($data, $default);
+        self::selectOptions($data, $default);
         echo '</select>';
     }
     

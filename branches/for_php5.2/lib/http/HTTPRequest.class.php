@@ -32,6 +32,14 @@ class HTTPRequest {
         }
     }
     
+    function requestTimeStamp() {
+        return $this->data['server']['REQUEST_TIME'];
+    }
+    
+    function requestTime($format = 'Y-m-d H:i:s') {
+        return date($format, $this->requestTimeStamp());
+    }
+    
     /**
      *
      * @return HTTPRequest
