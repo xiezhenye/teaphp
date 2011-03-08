@@ -447,12 +447,16 @@ class v {
      *
      * @param array $params
      */
-    static function urlFor($type, $action, $method = null, $params = array()) {
+    static function urlFor($type, $action, $method = null, $params = array(), $return = false) {
         $params['_type'] = $type;
         $params['_action'] = $action;
         $params['_method'] = is_null($method) ? $action : $method;
         $url = end(self::$tpl)->_dispatcher->urlFor($params);
-        echo $url;
+        if ($return) {
+            return $url;
+        } else {
+            echo $url;
+        }
     }
     
     /**
