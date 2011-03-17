@@ -607,6 +607,21 @@ class v {
         echo "<span class='radioBoxGroup'>$out</span>";
     }
     
+    static function checkBoxGroup($name, $data, $default = array()) {
+        $out = '';
+        foreach ($data as $value => $label) {
+            $checked = '';
+            if (in_array($value, (array)$default)) {
+                $checked = 'checked="checked" ';
+            }
+            $out.= '<label><input type="checkbox" '.$checked.
+                    'name="'.htmlspecialchars($name).
+                    '[]" value="'.htmlspecialchars($value).'">'.
+                    htmlspecialchars($label).'</label>';
+        }
+        echo "<span class='radioBoxGroup'>$out</span>";
+    }
+    
     /**
      * 返回一次性数据
      *

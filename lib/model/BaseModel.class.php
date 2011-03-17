@@ -13,10 +13,10 @@ class BaseModel {
         $this->id = (array) $id;
     }
     
-	/**
-	 * 得到主键值
-	 * @return mixed
-	 */
+    /**
+     * 得到主键值
+     * @return mixed
+     */
     function getId() {
         $ret = array();
         foreach ((array) $this->id as $id) {
