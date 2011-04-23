@@ -90,6 +90,9 @@ class PHPView extends BaseView{
         ob_start();
         $_old_error_reporting = error_reporting();
         error_reporting($_old_error_reporting & ~E_NOTICE);
+        if (isset($response_code)) {
+            HTTPResponse::getInstance()->sendStatusHeader($response_code);
+        }
         try {
             include $_path;
         } catch (Exception $e) {
@@ -114,15 +117,15 @@ class PHPView extends BaseView{
     }
     
     function renderDefaultView($_data, $_tplName) {
-    	if ($_tplName == BaseView::NOTFOUND) {
-    		HTTPResponse::getInstance()->sendStatusHeader(404);
-    	}
-        $dir = 
+        if (isset($this->_conf['data'])) {
+            $_data = array_merge($_data, (array)$this->_conf['data']);
+        }
+    	if (isset($_data['response_code'])) {
+            HTTPResponse::getInstance()->sendStatusHeader($_data['response_code']);
+        }
         $path = $this->tplPath($this->_tplDir['status'], $_tplName);
         if (is_file($path)) {
-            if (isset($this->_conf['data'])) {
-                $_data = array_merge($_data, (array)$this->_conf['data']);
-            }
+            
             extract($_data);
             unset($_data);
             include $path;

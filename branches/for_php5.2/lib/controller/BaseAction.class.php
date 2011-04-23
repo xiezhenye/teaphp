@@ -28,16 +28,18 @@ class BaseAction {
     
     function addBeforeActionCallback($callback) {
         if (!is_callable($callback)) {
-            return;
+            return false;
         }
         $this->beforeActionCallbacks[]= $callback;
+        return true;
     }
     
     function addAfterActionCallback($callback) {
         if (!is_callable($callback)) {
-            return;
+            return false;
         }
         $this->afterActionCallbacks[]= $callback;
+        return true;
     }
     
     function beforeAction(&$methodName, &$request) {
