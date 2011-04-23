@@ -38,6 +38,37 @@ class FrontController {
         return strtolower($http_method).StringUtil::camelize($method);
     }
     
+    function addCallbacks($action, $type, $action_name, $method_name) {
+        $before_callbacks = $this->app->conf('app', "actions/$type/hooks/before", array());
+        foreach ($before_callbacks as $name => $callback) {
+            if (is_string($name)) {
+                if (strpos($name, '.') !== false) {
+                    $name = explode('.', $name, 2);
+                    if ($name[0] != $action_name || $name[1] != $method_name) {
+                        continue;
+                    }
+                } elseif ($name != $action_name) {
+                    continue;
+                }
+            } 
+            $action->addBeforeActionCallback($callback);
+        }
+        $after_callbacks = $this->app->conf('app', "actions/$type/hooks/after'", array());
+        foreach ($after_callbacks as $name => $callback) {
+            if (is_string($name)) {
+                if (strpos($name, '.') !== false) {
+                    $name = explode('.', $name, 2);
+                    if ($name[0] != $action_name || $name[1] != $method_name) {
+                        continue;
+                    }
+                } elseif ($name != $action_name) {
+                    continue;
+                }
+            } 
+            $action->addAfterActionCallback($callback);
+        }
+    }
+    
     /**
      * 调用控制器
      *
@@ -52,13 +83,17 @@ class FrontController {
         $class_name = self::getActionClass($type, $action_name);
         $method_name = self::getMethodName($http_method, $method);
         if (!class_exists($class_name)) {
-            $response->sendStatusHeader(404);
-            echo "no action $class_name\n";
+            $this->view->render(array(
+                            'message'=>"no action $class_name",
+                            'response_code'=>404
+                        ), BaseView::ERROR);
             return;
         }
         if (! method_exists($class_name, $method_name)) {
-            $response->sendStatusHeader(404);
-            echo "no $class_name $method_name\n";
+            $this->view->render(array(
+                            'message'=>"no $class_name $method_name",
+                            'response_code'=>404
+                        ), BaseView::ERROR);
             return;
         }
         $module_name = app()->getClassModule($class_name);
@@ -68,14 +103,7 @@ class FrontController {
             /** @var BaseAction */
             $action = new $class_name();
             // add callbacks
-            $before_callbacks = $this->app->conf('app', "actions/$type/hooks/before", array());
-            foreach ($before_callbacks as $callback) {
-                $action->addBeforeActionCallback($callback);
-            }
-            $after_callbacks = $this->app->conf('app', "actions/$type/hooks/after'", array());
-            foreach ($after_callbacks as $callback) {
-                $action->addAfterActionCallback($callback);
-            }
+            $this->addCallbacks($action, $type, $action_name, $method_name);
             
             $action->setApp($this->app);
             
