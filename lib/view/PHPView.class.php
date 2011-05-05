@@ -63,7 +63,26 @@ class PHPView extends BaseView{
                         $this->_tplDir[$this->_conf['layout']] :
                         '';
     }
-        
+    
+    function getNormalTplPath($name, $follow_app = false) {
+        $path = $this->_tplPath($this->_tplDir['module'], $name);
+        if (is_file($path)) {
+            return $path;
+        }
+        if ($follow_app) {
+            $path = $this->_tplPath($this->_tplDir['app'], $name);
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+        return null;
+    }
+    
+    function getStatusTplPath($name) {
+        $path = $this->_tplPath($this->_tplDir['status'], $name);
+        return $path;
+    }
+    
     /**
      * 渲染模板
      *
@@ -72,19 +91,27 @@ class PHPView extends BaseView{
      */
     function render($_data, $_tplName) {
         $this->init();
-        v::pushView($this);
+        $_path = $this->getNormalTplPath($_tplName);
         
-        $this->_data = $_data;
-        if (isset($this->_conf['data'])) {
-            $this->_data = array_merge($this->_data, (array)$this->_conf['data']);
-        }
-        $_path = $this->tplPath($this->_tplDir['module'], $_tplName);
-        if (!is_file($_path)) {
+        if (!$_path) {
             $this->renderDefaultView($_data, $_tplName);
             v::popView();
             return;
         }
         
+        $this->_render($_data, $_path);
+        
+        
+        
+    }
+    
+    function _render($_data, $_tplFile) {
+        
+        v::pushView($this);
+        $this->_data = $_data;
+        if (isset($this->_conf['data'])) {
+            $this->_data = array_merge($this->_data, (array)$this->_conf['data']);
+        }
         unset($_data);
         extract($this->_data);
         ob_start();
@@ -94,7 +121,7 @@ class PHPView extends BaseView{
             HTTPResponse::getInstance()->sendStatusHeader($response_code);
         }
         try {
-            include $_path;
+            include $_tplFile;
         } catch (Exception $e) {
             if (defined('DEBUG_MODE')) {
                 echo $e->getMessage();
@@ -103,7 +130,7 @@ class PHPView extends BaseView{
         error_reporting($_old_error_reporting);
         $this->_curTplData = ob_get_clean();
         if (!empty($this->_tplDir['layout'])) { //use layout
-            $_path = $this->tplPath($this->_tplDir['layout'], $this->_layoutName);
+            $_path = $this->_tplPath($this->_tplDir['layout'], $this->_layoutName);
             include $_path;
         } else {
             echo $this->_curTplData;
@@ -112,26 +139,17 @@ class PHPView extends BaseView{
         v::popView();
     }
     
-    protected function tplPath($dir, $name) {
+    protected function _tplPath($dir, $name) {
         return $dir . DIRECTORY_SEPARATOR . $name . $this->_ext;
     }
     
     function renderDefaultView($_data, $_tplName) {
-        if (isset($this->_conf['data'])) {
-            $_data = array_merge($_data, (array)$this->_conf['data']);
-        }
-    	if (isset($_data['response_code'])) {
-            HTTPResponse::getInstance()->sendStatusHeader($_data['response_code']);
-        }
-        $path = $this->tplPath($this->_tplDir['status'], $_tplName);
-        if (is_file($path)) {
-            
-            extract($_data);
-            unset($_data);
-            include $path;
+        $_path = $this->getStatusTplPath($_tplName);
+        
+        if (is_file($_path)) {
+            $this->_render($_data, $_path);
             return;
         }
-        
         switch ($_tplName) {
         case BaseView::REDIRECT:
         case BaseView::SUCCESS:
