@@ -53,7 +53,7 @@ class FrontController {
             } 
             $action->addBeforeActionCallback($callback);
         }
-        $after_callbacks = $this->app->conf('app', "actions/$type/hooks/after'", array());
+        $after_callbacks = $this->app->conf('app', "actions/$type/hooks/after", array());
         foreach ($after_callbacks as $name => $callback) {
             if (is_string($name)) {
                 if (strpos($name, '.') !== false) {
