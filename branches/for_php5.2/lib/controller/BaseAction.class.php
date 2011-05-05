@@ -15,8 +15,8 @@ class BaseAction {
      */
     protected $app;
     
-    private $beforeActionCallbacks = array();
-    private $afterActionCallbacks = array();
+    protected $beforeActionCallbacks = array();
+    protected $afterActionCallbacks = array();
     
     /**
      *
